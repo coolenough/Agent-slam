@@ -189,6 +189,7 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 [x] src/strategy.py — written
 [x] agent.py — written
 [x] monitor/dashboard.html — match monitor UI built
+[x] tests/mock_server.py — local mock competition server built
 [ ] Sandbox tested
 [ ] WS credentials received from admin
 [ ] Live match tested
@@ -209,6 +210,7 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 - 2026-03-25: src/ws_client.py — WebSocket client with auto-reconnect, message routing, turn execution
 - 2026-03-25: Full agent codebase complete. All 6 files written and syntax verified. agent.py is the entry point. Run with: python agent.py (live) or python agent.py --sandbox (sandbox mode)
 - 2026-03-25: monitor/dashboard.html — real-time match spectator UI
+- 2026-03-25: tests/mock_server.py — local mock WebSocket server for offline testing
 
 ---
 
@@ -219,17 +221,18 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 - 2026-03-25: ws_client.py uses exponential backoff reconnection with max 30s wait. Reconnect urgency check fires if disconnect time exceeds RECONNECT_WINDOW_SECONDS - 10 to ensure we never hit the 2 minute DQ window. take_turn() has an 85 second hard cutoff guard so we never send a late message that the judge ignores. Every handler is wrapped in try/except so a bad message never kills the listener loop.
 - 2026-03-25: agent.py runs two modes — live (python agent.py) and sandbox (python agent.py --sandbox). Logging writes to both terminal and logs/ folder simultaneously so every match has a full audit trail. Startup checks verify API key and team name before any network connection is attempted so failures are obvious immediately.
 - 2026-03-25: Dashboard is a standalone HTML file connecting to same WS URL as agent. Read-only observer. Dark esports aesthetic with cyan (us) vs pink (opponent) color coding. Persists config in localStorage. Shows live turn indicator, phase tracker, message feed, and API cost stats.
+- 2026-03-25: Mock server simulates full match on ws://localhost:8765. No credentials needed. Plays a pre-scripted debate on AI harm vs benefit topic. Lets us test dashboard and agent without any real server. Agent can also connect to it for integration testing.
 
 ---
 
 ## Known Issues / Watchlist
 
-_(Claude Code logs bugs found, edge cases to handle, and things to revisit)_
+- Before real match day — replace mock server test with sandbox URL from admin. Verify agent connects to real server at least once in sandbox mode before competition.
 
 ---
 
 > Last updated: 2026-03-25
-> Next action: Receive WS credentials from admin, sandbox test, then competition
+> Next action: Test agent against mock server, then sandbox test with real credentials
 
 ---
 
