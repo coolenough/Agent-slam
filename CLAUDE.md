@@ -180,7 +180,7 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 [x] .env.example created
 [x] .gitignore created
 [x] venv created and packages installed
-[ ] First commit pushed
+[x] First commit pushed
 [x] CLAUDE.md committed
 [ ] src/config.py — written
 [ ] src/state_machine.py — written
