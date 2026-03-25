@@ -182,8 +182,8 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 [x] venv created and packages installed
 [x] First commit pushed
 [x] CLAUDE.md committed
-[ ] src/config.py — written
-[ ] src/state_machine.py — written
+[x] src/config.py — written
+[x] src/state_machine.py — written
 [ ] src/ws_client.py — written
 [ ] src/debate_engine.py — written
 [ ] src/strategy.py — written
@@ -201,6 +201,8 @@ TEAM_NAME=                ← team1 or team2 (set per match)
 - 2026-03-25: requirements.txt, .env.example, .gitignore, README.md created
 - 2026-03-25: venv created and all packages installed (anthropic, websockets, python-dotenv, aiohttp)
 - 2026-03-25: CLAUDE.md committed
+- 2026-03-25: src/config.py — env loading + all hardcoded constants
+- 2026-03-25: src/state_machine.py — MatchState dataclass with phase detection, turn tracking, conversation history
 
 ---
 
@@ -217,7 +219,7 @@ _(Claude Code logs bugs found, edge cases to handle, and things to revisit)_
 ---
 
 > Last updated: 2026-03-25
-> Next action: Build out src/config.py, src/state_machine.py, src/ws_client.py, src/debate_engine.py, src/strategy.py, and agent.py
+> Next action: Build out src/ws_client.py, src/debate_engine.py, src/strategy.py, and agent.py
 
 ---
 
