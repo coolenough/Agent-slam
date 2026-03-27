@@ -6,7 +6,7 @@ import time
 import websockets
 import websockets.exceptions
 
-from src.config import RECONNECT_WINDOW_SECONDS, MAX_RECONNECT_ATTEMPTS
+from src.config import RECONNECT_WINDOW_SECONDS, MAX_RECONNECT_ATTEMPTS, TEAM_EMAIL, TEAM_PASSWORD
 from src.state_machine import MatchState
 from src.debate_engine import DebateEngine
 
@@ -33,6 +33,7 @@ class WSClient:
                     self.connected = True
                     self.reconnect_attempts = 0
                     logger.info("Connected to match server")
+                    await self.authenticate()
                     await self.listen()
             except websockets.exceptions.ConnectionClosed as e:
                 self.connected = False
@@ -44,6 +45,22 @@ class WSClient:
                 self.last_disconnect_time = time.time()
                 logger.error("Connection error: %s", e)
                 await self.handle_reconnect()
+
+    async def authenticate(self) -> None:
+        """Send login credentials immediately after connecting, if provided."""
+        if not TEAM_EMAIL or not TEAM_PASSWORD:
+            logger.info("No TEAM_EMAIL/TEAM_PASSWORD set — skipping auth handshake")
+            return
+
+        auth_payload = {
+            "type": "auth",
+            "data": {
+                "email": TEAM_EMAIL,
+                "password": TEAM_PASSWORD,
+            },
+        }
+        await self.send_json(auth_payload)
+        logger.info("Auth handshake sent for: %s", TEAM_EMAIL)
 
     async def handle_reconnect(self) -> None:
         self.reconnect_attempts += 1
@@ -122,7 +139,7 @@ class WSClient:
             self.state.turn, self.state.status, self.state.topic,
         )
         if self.state.is_our_turn:
-            logger.info("IT IS OUR TURN — generating argument")
+            logger.info("IT IS OUR TURN (via match-state) — generating argument")
             await self.take_turn()
 
     async def handle_match_update(self, data: dict) -> None:
@@ -140,6 +157,24 @@ class WSClient:
         if team != self.state.our_team:
             self.state.record_opponent_message(team, message, timestamp)
             logger.info("Opponent argued: %s...", message[:100])
+
+            # Trigger our turn immediately on receiving opponent's message.
+            # Some servers update match-state.turn separately; others rely solely
+            # on debate-message to signal it is our turn. We update the turn field
+            # here so is_our_turn evaluates correctly, then attempt to send.
+            if self.state.status == "started":
+                other_team = (
+                    self.state.team2
+                    if team == self.state.team1
+                    else self.state.team1
+                )
+                # Optimistically set turn to us (will be confirmed/overridden by
+                # the next match-state broadcast from the server).
+                self.state.turn = other_team if other_team == self.state.our_team else self.state.our_team
+                if self.state.turn == self.state.our_team:
+                    self.state.turn_start_time = time.time()
+                    logger.info("IT IS OUR TURN (via debate-message) — generating argument")
+                    await self.take_turn()
 
     async def handle_match_resumed(self, data: dict) -> None:
         finish_time = data.get("finishTime")
