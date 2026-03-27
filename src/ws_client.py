@@ -25,6 +25,28 @@ class WSClient:
         self.reconnect_attempts = 0
         self.last_disconnect_time = 0.0
 
+        # ---------------------------------------------------------------
+        # _turn_in_progress FLAG — WHY THIS EXISTS:
+        #
+        # The competition server sends TWO signals when it becomes our turn:
+        #   1. A `debate-message` (opponent's argument) — we detect the turn
+        #      change and call take_turn() immediately.
+        #   2. A `match-state` update (turn = our_team) — arrives milliseconds
+        #      later and calls take_turn() a SECOND time.
+        #
+        # Without this flag, the agent would generate and send TWO arguments
+        # per turn. The first sends fine; the second gets rejected by the
+        # server with "It's not your turn!" because we already sent and the
+        # server has switched the turn back to the opponent.
+        #
+        # Fix: set this flag to True the moment we START generating an argument.
+        # Any subsequent take_turn() call checks this flag first and exits
+        # immediately if a turn is already being processed.
+        # The flag is reset to False inside record_our_message() after we
+        # successfully send, so the next turn starts clean.
+        # ---------------------------------------------------------------
+        self._turn_in_progress = False
+
     async def connect(self) -> None:
         while self.running:
             try:
@@ -107,6 +129,9 @@ class WSClient:
 
                 elif msg_type == "match-paused":
                     self.state.status = "paused"
+                    # Reset flag on pause so we don't get stuck if a turn
+                    # was mid-flight when the match was paused.
+                    self._turn_in_progress = False
                     logger.info("Match paused")
 
                 elif msg_type == "match-resumed":
@@ -199,11 +224,24 @@ class WSClient:
             logger.debug("take_turn called but not our turn, skipping")
             return
 
+        # DOUBLE-TRIGGER GUARD:
+        # Both `debate-message` and the following `match-state` can call
+        # take_turn() within milliseconds of each other for the same turn.
+        # This flag ensures only the FIRST call proceeds; the second is
+        # dropped immediately. The flag is cleared in record_our_message()
+        # so the next turn starts fresh.
+        if self._turn_in_progress:
+            logger.debug("Turn already in progress — skipping duplicate trigger")
+            return
+        self._turn_in_progress = True
+
         if self.state.seconds_on_our_turn > 85:
             logger.warning(
                 "Turn time exceeded 85s (%.1fs), skipping to avoid late send",
                 self.state.seconds_on_our_turn,
             )
+            # Reset flag since we are not actually sending
+            self._turn_in_progress = False
             return
 
         try:
@@ -220,6 +258,10 @@ class WSClient:
 
         except Exception as e:
             logger.error("Failed to send argument: %s", e)
+        finally:
+            # Always reset the flag after the turn attempt completes
+            # (success or failure) so the next turn is never blocked.
+            self._turn_in_progress = False
 
     async def send_json(self, payload: dict) -> None:
         await self.ws.send(json.dumps(payload))
