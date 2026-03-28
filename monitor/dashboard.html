@@ -327,28 +327,20 @@
       <input type="text" id="s-url" value="ws://localhost:8766" placeholder="ws://localhost:8766">
     </div>
     <div class="field">
-      <label>Your Team Name</label>
-      <input type="text" id="s-team" placeholder="team1">
+      <label>Bot Team Name (must match TEAM_NAME in .env)</label>
+      <input type="text" id="s-team" placeholder="team1 or team2" value="team1">
+    </div>
+    <div class="field">
+      <label>Topic</label>
+      <input type="text" id="s-topic" placeholder="AI will do more harm than good">
     </div>
     <div class="row">
-      <div class="field">
-        <label>Topic</label>
-        <input type="text" id="s-topic" placeholder="AI will do more harm than good">
-      </div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Bot Stance</label>
-        <select id="s-stance">
-          <option value="team1">PRO (team1)</option>
-          <option value="team2">CON (team2)</option>
-        </select>
-      </div>
       <div class="field">
         <label>Duration (sec)</label>
         <input type="number" id="s-duration" value="900" min="60" max="3600">
       </div>
     </div>
+    <p style="font-size:11px; color:var(--text-3); margin-top:4px;">team1 = PRO, team2 = CON (server assigns automatically)</p>
 
     <button class="btn btn-primary" id="btn-go" onclick="doConnect()">Connect &amp; Start Match</button>
     <div class="setup-error" id="s-err"></div>
@@ -434,8 +426,8 @@
   "use strict";
 
   let ws = null;
+  let connected = false;
   let team = "";
-  let botTeam = "";
   let finishMs = 0;
   let tick = null;
   let botMsgs = 0, oppMsgs = 0, totalBotChars = 0;
@@ -459,7 +451,6 @@
       localStorage.setItem("t_url", $("s-url").value);
       localStorage.setItem("t_team", $("s-team").value);
       localStorage.setItem("t_topic", $("s-topic").value);
-      localStorage.setItem("t_stance", $("s-stance").value);
       localStorage.setItem("t_dur", $("s-duration").value);
     } catch(e){}
   }
@@ -469,7 +460,6 @@
       if (v("t_url"))    $("s-url").value = v("t_url");
       if (v("t_team"))   $("s-team").value = v("t_team");
       if (v("t_topic"))  $("s-topic").value = v("t_topic");
-      if (v("t_stance")) $("s-stance").value = v("t_stance");
       if (v("t_dur"))    $("s-duration").value = v("t_dur");
     } catch(e){}
   }
@@ -492,7 +482,6 @@
   window.doConnect = function() {
     const url = $("s-url").value.trim();
     team = $("s-team").value.trim();
-    botTeam = $("s-stance").value;
     const topic = $("s-topic").value.trim();
     const dur = parseInt($("s-duration").value) || 900;
 
@@ -508,30 +497,31 @@
     catch(e) { showErr("Bad URL: " + e.message); resetBtn(); return; }
 
     ws.onopen = function() {
+      connected = true;
+      console.log("[Dashboard] WebSocket open, sending dashboard-hello + start-match");
+
       // Identify as dashboard
       ws.send(JSON.stringify({type: "dashboard-hello"}));
 
-      addLog("Connected to server", "");
-
-      // Show dashboard
+      // Show dashboard view
       $("setup").style.display = "none";
       $("app").style.display = "grid";
       $("d-us").textContent = team;
       $("d-topic").textContent = topic || "Waiting for match...";
       startTick();
 
-      // Auto-start match
+      // Auto-start match — botTeam MUST match TEAM_NAME in .env
       ws.send(JSON.stringify({
         type: "start-match",
         data: {
           topic: topic,
           description: "",
           round: "Round 1",
-          botTeam: botTeam,
+          botTeam: team,
           durationSeconds: dur,
         }
       }));
-      addLog("Start-match sent (bot=" + botTeam + ", " + dur + "s)", "");
+      addLog("Connected. Start-match sent (bot=" + team + ", " + dur + "s)", "");
     };
 
     ws.onmessage = function(ev) {
@@ -540,18 +530,29 @@
     };
 
     ws.onerror = function() {
-      showErr("Connection failed. Is test_server.py running?");
-      resetBtn();
+      console.error("[Dashboard] WebSocket error");
+      // Only show error on setup screen if we never connected
+      if (!connected) {
+        showErr("Connection failed. Is test_server.py running?");
+        resetBtn();
+      }
     };
 
     ws.onclose = function(ev) {
-      addLog("Disconnected (code " + ev.code + ")", "wrn");
-      $("dot").className = "dot off";
-      setStatus("disconnected");
+      console.log("[Dashboard] WebSocket closed, code=" + ev.code);
+      if (connected) {
+        addLog("Disconnected (code " + ev.code + ")", "wrn");
+        $("dot").className = "dot off";
+        setStatus("disconnected");
+      } else {
+        showErr("Connection closed before ready (code " + ev.code + "). Is test_server.py running?");
+        resetBtn();
+      }
     };
   };
 
   window.doDisconnect = function() {
+    connected = false;
     if (ws) { ws.close(); ws = null; }
     stopTick();
     $("app").style.display = "none";
@@ -643,7 +644,6 @@
       case "server-event":
         addLog("Server: " + (d.message || ""), "");
         if (d.finishTime) finishMs = d.finishTime;
-        if (d.botTeam) botTeam = d.botTeam;
         break;
 
       case "error":
@@ -671,7 +671,7 @@
 
   function onDebateMsg(from, d) {
     const text = d.message || "";
-    const isOurs = same(from, team) || same(from, botTeam);
+    const isOurs = same(from, team);
 
     if (isOurs) {
       botMsgs++;
@@ -725,7 +725,7 @@
   function updateTurn() {
     const el = $("d-turn");
     const txt = $("d-turn-text");
-    if (same(turn, team) || same(turn, botTeam)) {
+    if (same(turn, team)) {
       el.className = "turn-pill ours";
       txt.textContent = "Bot's Turn";
     } else {
@@ -735,7 +735,7 @@
   }
 
   function updateStances() {
-    if (same(botTeam, pros) || same(team, pros)) {
+    if (same(team, pros)) {
       $("d-us-stance").textContent = "PRO";
       $("d-opp-stance").textContent = "CON";
     } else {
@@ -743,7 +743,7 @@
       $("d-opp-stance").textContent = "PRO";
     }
     // opponent name
-    const opp = same(botTeam, "team1") ? "team2" : "team1";
+    const opp = same(team, "team1") ? "team2" : "team1";
     $("d-opp").textContent = opp;
   }
 
