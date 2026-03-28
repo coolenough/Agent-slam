@@ -46,6 +46,27 @@ def check_environment() -> bool:
     return ok
 
 
+def parse_sandbox_args() -> tuple[str, str, str]:
+    """
+    Parse optional sandbox CLI flags:
+      --topic  "Your debate topic here"
+      --pros   team_name_arguing_pro
+      --cons   team_name_arguing_con
+
+    Only used when running with --sandbox. Has zero effect on live match runs.
+    """
+    topic, pros, cons = "", "", ""
+    args = sys.argv[1:]
+    for i, arg in enumerate(args):
+        if arg == "--topic" and i + 1 < len(args):
+            topic = args[i + 1]
+        elif arg == "--pros" and i + 1 < len(args):
+            pros = args[i + 1]
+        elif arg == "--cons" and i + 1 < len(args):
+            cons = args[i + 1]
+    return topic, pros, cons
+
+
 async def main() -> None:
     if not check_environment():
         sys.exit(1)
@@ -74,6 +95,34 @@ async def main() -> None:
 
     state = MatchState()
     state.our_team = TEAM_NAME
+
+    # ── SANDBOX ONLY: pre-fill topic & stance from CLI flags ──────────────────
+    # This block is skipped entirely during live match (no --sandbox flag).
+    # Usage:
+    #   python agent.py --sandbox --topic "AI in finance" --pros team2 --cons Perplexity
+    #   python agent.py --sandbox --topic "AI in finance" --pros Perplexity --cons team2
+    if sandbox:
+        topic, pros, cons = parse_sandbox_args()
+        if topic:
+            state.topic = topic
+            state.pros = pros if pros else TEAM_NAME
+            state.cons = cons if cons else "Perplexity"
+            state.status = "started"
+            logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            logger.info("  SANDBOX PRE-FILL")
+            logger.info("  Topic : %s", state.topic)
+            logger.info("  PRO   : %s", state.pros)
+            logger.info("  CON   : %s", state.cons)
+            logger.info("  Stance: %s", state.our_stance)
+            logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        else:
+            logger.warning(
+                "Sandbox mode: no --topic given. "
+                "Agent will respond but prompts will have empty topic. "
+                "Tip: python agent.py --sandbox --topic \"...\" --pros team2 --cons Perplexity"
+            )
+    # ─────────────────────────────────────────────────────────────────────────
+
     engine = DebateEngine()
     client = WSClient(ws_url, state, engine, sandbox=sandbox)
 
