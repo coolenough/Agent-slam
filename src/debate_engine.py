@@ -103,7 +103,17 @@ class DebateEngine:
                     "You are a research assistant for competitive debate. "
                     "Search the web and return structured facts with real verified URLs. Be concise."
                 ),
-                tools=[{"type": "web_search_20250305", "name": "web_search"}],
+                tools=[{
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": 2,
+                    "allowed_domains": [
+                        "reuters.com", "bbc.com", "theguardian.com",
+                        "pewresearch.org", "weforum.org", "statista.com",
+                        "worldbank.org", "un.org", "nature.com", "harvard.edu",
+                        "economist.com", "ft.com", "bloomberg.com", "apnews.com",
+                    ],
+                }],
                 messages=[{"role": "user", "content": prompt}],
             )
             self.call_count += 1
