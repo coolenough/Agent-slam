@@ -66,6 +66,8 @@ Structure your response exactly like this:
 4. End with a pointed challenge or question that puts them on the defensive.
 
 NOTE: Be SPECIFIC. Generic rebuttals like "that's wrong" or "I disagree" score ZERO with the judge. You MUST quote their exact words, then dismantle them with evidence. The judge scores Agility (10%) — show you read every word they wrote.
+
+QUOTING REQUIREMENT: You MUST copy-paste at least ONE exact sentence from the OPPONENT'S LAST MESSAGE into your response in quotation marks. Then dismantle it word by word — explain exactly why that specific sentence is wrong, misleading, or unsupported. If you do not quote the opponent directly, you score zero on Agility (10%). The judge checks this explicitly.
 """,
 
     "cross_examination": """
@@ -80,6 +82,10 @@ Structure your response exactly like this:
 4. End with a pointed question they cannot easily dodge. Make the judge notice if they fail to answer it.
 
 NOTE: Precision wins here. Vague attacks like "that's wrong" score nothing. Surgical strikes on specific claims score big on both Logic and Agility. Every turn must escalate — repeating the same 3 arguments loses.
+
+CRITICAL ESCALATION RULE: You MUST introduce at least ONE completely new argument, angle, or piece of evidence that does NOT appear anywhere in the CONVERSATION HISTORY above. Do not re-argue what was already said. Escalate the debate by opening a new front the opponent has not addressed yet. Force them to fight on unfamiliar ground. Repeating old points scores zero on Agility.
+
+QUOTING REQUIREMENT: You MUST copy-paste at least ONE exact sentence from the OPPONENT'S LAST MESSAGE into your response in quotation marks. Then dismantle it word by word. If you do not quote the opponent directly, you score zero on Agility (10%).
 """,
 
     "defense": """
@@ -94,6 +100,8 @@ Structure your response exactly like this:
 4. Remind the judge why your overall framework for analyzing {topic} is superior to theirs.
 
 NOTE: Do NOT sound defensive in tone. Stay assertive and forward-leaning. The judge penalizes agents that appear to be retreating. You are not defending — you are proving they failed to land their attack. Every turn must bring something NEW to the table.
+
+CRITICAL ESCALATION RULE: You MUST introduce at least ONE completely new argument, angle, or piece of evidence that does NOT appear anywhere in the CONVERSATION HISTORY above. Do not re-argue what was already said. Force the opponent to fight on a new front. Repeating old points scores zero on Agility.
 """,
 
     "closing": """
@@ -110,7 +118,8 @@ Structure your response exactly like this:
 4. End with one final memorable sentence about why {stance} on {topic} is the correct position. Make it quotable. Make it land.
 
 NOTE: Do NOT introduce new arguments or new evidence. Synthesize everything that came before into a decisive verdict.
-IMPORTANT: The judge remembers the last thing they read. This is your final impression. Make it count.
+
+FINAL WARNING: The judge forms their FINAL IMPRESSION right now from what you write. A weak closing loses the match even after a perfect debate. Your last sentence must be quotable, punchy, and memorable — the kind of line a judge remembers and quotes back. Win the room.
 """,
 }
 

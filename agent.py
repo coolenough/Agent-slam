@@ -107,7 +107,6 @@ async def main() -> None:
             state.topic = topic
             state.pros = pros if pros else TEAM_NAME
             state.cons = cons if cons else "Perplexity"
-            state.status = "started"
             logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             logger.info("  SANDBOX PRE-FILL")
             logger.info("  Topic : %s", state.topic)

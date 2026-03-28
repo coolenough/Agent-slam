@@ -3,1793 +3,1057 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent SLAM 2026 — Match Monitor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Agent SLAM 2026 — Live Match</title>
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-:root {
-  --bg: #0a0a0f;
-  --cyan: #00f5ff;
-  --pink: #ff3366;
-  --orange: #ff8c00;
-  --neutral: #7c7c9a;
-  --success: #00ff88;
-  --warning: #ffaa00;
-  --text-primary: #e8e8ff;
-  --text-secondary: #7c7c9a;
-  --card-bg: #12121a;
-  --border: #1e1e2e;
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
+  :root {
+    --bg: #0a0a0c;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-hover: rgba(255, 255, 255, 0.07);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --text: #f5f5f7;
+    --text-secondary: rgba(245, 245, 247, 0.6);
+    --text-tertiary: rgba(245, 245, 247, 0.35);
+    --cyan: #32d7ff;
+    --cyan-dim: rgba(50, 215, 255, 0.15);
+    --rose: #ff6b8a;
+    --rose-dim: rgba(255, 107, 138, 0.15);
+    --green: #30d158;
+    --amber: #ffd60a;
+    --red: #ff453a;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  }
 
-html, body {
-  width: 100vw; height: 100vh;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-}
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* ========== SETUP SCREEN ========== */
-#setup-screen {
-  position: fixed; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg);
-  z-index: 1000;
-}
-#setup-screen.hidden { display: none; }
-.setup-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 48px;
-  width: 420px;
-  text-align: center;
-}
-.setup-card h1 {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  color: var(--cyan);
-  margin-bottom: 8px;
-  text-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-}
-.setup-card p {
-  color: var(--text-secondary);
-  font-size: 13px;
-  margin-bottom: 32px;
-}
-.setup-card label {
-  display: block;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.setup-card input {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  margin-bottom: 20px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.setup-card input:focus { border-color: var(--cyan); }
-.setup-card button {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--cyan), #0088aa);
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: opacity 0.2s;
-}
-.setup-card button:hover { opacity: 0.85; }
+  /* ── Setup Screen ─────────────────────────────────── */
 
-/* ========== MAIN LAYOUT ========== */
-#main-screen { display: none; flex-direction: column; height: 100vh; }
-#main-screen.active { display: flex; }
+  #setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(50, 215, 255, 0.06) 0%, transparent 60%);
+  }
 
-/* TOP BAR */
-.top-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  height: 60px; padding: 0 24px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.top-bar .logo {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--cyan);
-  text-shadow: 0 0 15px rgba(0, 245, 255, 0.4);
-  letter-spacing: 2px;
-}
-.top-bar-center {
-  display: flex; align-items: center; gap: 16px;
-}
-.tab-btn {
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.tab-btn:hover { border-color: var(--cyan); color: var(--text-primary); }
-.tab-btn.active {
-  background: rgba(0, 245, 255, 0.1);
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
-.top-bar-right {
-  display: flex; align-items: center; gap: 16px;
-}
-.status-badge {
-  padding: 6px 20px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  position: relative;
-}
-.status-badge.live {
-  color: var(--pink);
-  border-color: var(--pink);
-  animation: livePulse 2s ease-in-out infinite;
-}
-.status-badge.live::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px;
-  background: var(--pink);
-  border-radius: 50%;
-  margin-right: 8px;
-  animation: dotPulse 1.5s ease-in-out infinite;
-}
-.status-badge.paused { color: var(--warning); border-color: var(--warning); }
-.status-badge.finished { color: var(--success); border-color: var(--success); }
-.timer {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary);
-  min-width: 90px;
-  text-align: right;
-}
-.timer.warning { color: var(--pink); animation: timerShake 10s infinite; }
+  .setup-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  }
 
-/* ========== TEST MODE TOGGLE ========== */
-.mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.mode-btn {
-  padding: 6px 14px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.mode-btn.active-live {
-  background: rgba(0, 245, 255, 0.12);
-  color: var(--cyan);
-}
-.mode-btn.active-test {
-  background: rgba(255, 140, 0, 0.15);
-  color: var(--orange);
-}
-.mode-separator {
-  width: 1px;
-  height: 28px;
-  background: var(--border);
-}
+  .setup-card h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
 
-/* ========== TAB CONTENT ========== */
-.tab-content { display: none; flex: 1; min-height: 0; overflow: hidden; flex-direction: column; }
-.tab-content.active { display: flex; }
+  .setup-card .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
 
-/* ========== MATCH TAB ========== */
-.middle {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+  .field { margin-bottom: 20px; }
 
-/* PANELS */
-.panel {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  overflow: hidden;
-  border-right: 1px solid var(--border);
-}
-.panel:last-child { border-right: none; }
-.panel-left, .panel-right { width: 35%; }
-.panel-center { width: 30%; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
 
-.panel-left.our-turn {
-  animation: cyanBorderPulse 1.5s ease-in-out infinite;
-}
-.panel-right.their-turn {
-  animation: pinkBorderPulse 1.5s ease-in-out infinite;
-}
+  .field input, .field select {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--mono);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
 
-/* Test mode: orange glow on right panel */
-.panel-right.test-mode-active {
-  border-left: 1px solid rgba(255, 140, 0, 0.2);
-}
+  .field input:focus, .field select:focus {
+    border-color: var(--cyan);
+    background: rgba(50, 215, 255, 0.04);
+  }
 
-.team-name {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-.team-name.cyan { color: var(--cyan); text-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
-.team-name.pink { color: var(--pink); text-shadow: 0 0 20px rgba(255, 51, 102, 0.3); }
-.team-name.orange { color: var(--orange); text-shadow: 0 0 20px rgba(255, 140, 0, 0.3); }
+  .field input::placeholder { color: var(--text-tertiary); }
 
-.stance-badge {
-  display: inline-block;
-  padding: 4px 14px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  margin-bottom: 16px;
-}
-.stance-badge.pro { background: rgba(0, 255, 136, 0.15); color: var(--success); border: 1px solid rgba(0, 255, 136, 0.3); }
-.stance-badge.con { background: rgba(255, 51, 102, 0.15); color: var(--pink); border: 1px solid rgba(255, 51, 102, 0.3); }
+  .field select {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
 
-.turn-indicator {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-align: center;
-  margin-bottom: 16px;
-  background: var(--bg);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-.turn-indicator.active-cyan {
-  background: rgba(0, 245, 255, 0.1);
-  color: var(--cyan);
-  border-color: var(--cyan);
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
-}
-.turn-indicator.active-pink {
-  background: rgba(255, 51, 102, 0.1);
-  color: var(--pink);
-  border-color: var(--pink);
-  text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
-}
-.turn-indicator.active-orange {
-  background: rgba(255, 140, 0, 0.1);
-  color: var(--orange);
-  border-color: var(--orange);
-  text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
-}
+  .btn-connect {
+    width: 100%;
+    padding: 14px;
+    background: var(--cyan);
+    color: #000;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
 
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid rgba(30, 30, 46, 0.5);
-}
-.stat-row .val {
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
+  .btn-connect:hover { opacity: 0.9; }
+  .btn-connect:active { transform: scale(0.98); }
+  .btn-connect:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.phase-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  background: rgba(0, 245, 255, 0.1);
-  color: var(--cyan);
-  border: 1px solid rgba(0, 245, 255, 0.2);
-  margin: 8px 0;
-  transition: all 0.3s;
-}
-.phase-badge.flash {
-  background: rgba(255, 255, 255, 0.3);
-  color: #fff;
-  text-shadow: 0 0 15px #fff;
-}
+  .setup-error {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(255, 69, 58, 0.1);
+    border: 1px solid rgba(255, 69, 58, 0.2);
+    border-radius: var(--radius-sm);
+    color: var(--red);
+    font-size: 13px;
+    display: none;
+  }
 
-.last-arg-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 12px;
-  margin-bottom: 6px;
-}
-.last-arg {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 12px;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  word-wrap: break-word;
-}
-.last-arg.cyan-tint { border-color: rgba(0, 245, 255, 0.15); }
-.last-arg.pink-tint { border-color: rgba(255, 51, 102, 0.15); }
+  /* ── Main Dashboard ───────────────────────────────── */
 
-/* SCROLLBAR */
-.last-arg::-webkit-scrollbar, .feed::-webkit-scrollbar, .monitor-log::-webkit-scrollbar { width: 4px; }
-.last-arg::-webkit-scrollbar-track, .feed::-webkit-scrollbar-track, .monitor-log::-webkit-scrollbar-track { background: transparent; }
-.last-arg::-webkit-scrollbar-thumb, .feed::-webkit-scrollbar-thumb, .monitor-log::-webkit-scrollbar-thumb {
-  background: var(--border); border-radius: 2px;
-}
+  #dashboard {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    background: radial-gradient(ellipse at 30% 0%, rgba(50, 215, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 0%, rgba(255, 107, 138, 0.03) 0%, transparent 50%);
+  }
 
-/* CENTER FEED */
-.feed-header {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-align: center;
-  margin-bottom: 12px;
-}
-.feed {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 4px;
-}
-.feed-msg {
-  max-width: 92%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  word-wrap: break-word;
-  opacity: 0;
-  animation: fadeSlideIn 0.4s forwards;
-}
-.feed-msg.ours {
-  align-self: flex-end;
-  background: rgba(0, 245, 255, 0.08);
-  border: 1px solid rgba(0, 245, 255, 0.2);
-  color: var(--text-primary);
-  --slide-from: 30px;
-}
-.feed-msg.opponent {
-  align-self: flex-start;
-  background: rgba(255, 51, 102, 0.08);
-  border: 1px solid rgba(255, 51, 102, 0.2);
-  color: var(--text-primary);
-  --slide-from: -30px;
-}
-.feed-msg.injected {
-  align-self: flex-start;
-  background: rgba(255, 140, 0, 0.08);
-  border: 1px solid rgba(255, 140, 0, 0.25);
-  color: var(--text-primary);
-  --slide-from: -30px;
-}
-.feed-msg.system {
-  align-self: center;
-  background: rgba(124, 124, 154, 0.1);
-  border: 1px solid rgba(124, 124, 154, 0.15);
-  color: var(--text-secondary);
-  font-size: 10px;
-  font-family: var(--font-sans);
-  max-width: 80%;
-  text-align: center;
-  --slide-from: 0;
-}
-.feed-msg .sender {
-  font-size: 10px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.feed-msg.ours .sender { color: var(--cyan); }
-.feed-msg.opponent .sender { color: var(--pink); }
-.feed-msg.injected .sender { color: var(--orange); }
+  /* ── Top Bar ──────────────────────────────────────── */
 
-/* ========== INJECT PANEL (TEST MODE) ========== */
-.inject-panel {
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 140, 0, 0.2);
-  flex-shrink: 0;
-}
-.inject-panel.visible { display: flex; }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
 
-.inject-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--orange);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.inject-label .shortcut-hint {
-  font-size: 10px;
-  color: var(--text-secondary);
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
+  .top-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
 
-.inject-textarea {
-  width: 100%;
-  min-height: 90px;
-  max-height: 140px;
-  padding: 10px 12px;
-  background: var(--bg);
-  border: 1px solid rgba(255, 140, 0, 0.3);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.inject-textarea:focus { border-color: var(--orange); }
-.inject-textarea::placeholder { color: var(--text-secondary); }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    flex-shrink: 0;
+  }
 
-.inject-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.inject-char-count {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-secondary);
-}
-.inject-char-count.warn { color: var(--warning); }
-.inject-char-count.over { color: var(--pink); }
+  .status-dot.disconnected {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red);
+  }
 
-.inject-btn {
-  padding: 8px 20px;
-  background: linear-gradient(135deg, var(--orange), #cc6600);
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: opacity 0.2s, transform 0.1s;
-  flex-shrink: 0;
-}
-.inject-btn:hover { opacity: 0.85; }
-.inject-btn:active { transform: scale(0.97); }
-.inject-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .match-topic {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.inject-status {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  min-height: 14px;
-}
-.inject-status.sent { color: var(--success); }
-.inject-status.error { color: var(--pink); }
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
 
-/* TEST MODE BANNER */
-.test-mode-banner {
-  display: none;
-  background: rgba(255, 140, 0, 0.08);
-  border-bottom: 1px solid rgba(255, 140, 0, 0.2);
-  padding: 6px 24px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--orange);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.test-mode-banner.visible { display: block; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
 
-/* ========== MONITOR TAB ========== */
-.monitor-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 16px;
-  padding: 20px;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-.monitor-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.monitor-card h3 {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--cyan);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
-  flex-shrink: 0;
-}
-.monitor-card.span-full { grid-column: 1 / -1; }
-.monitor-card.span-2 { grid-column: span 2; }
+  .badge-phase {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-.health-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.health-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-.health-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.health-dot.ok { background: var(--success); box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
-.health-dot.warn { background: var(--warning); box-shadow: 0 0 8px rgba(255, 170, 0, 0.4); }
-.health-dot.error { background: var(--pink); box-shadow: 0 0 8px rgba(255, 51, 102, 0.4); }
-.health-dot.unknown { background: var(--neutral); }
-.health-label {
-  font-size: 11px;
-  color: var(--text-secondary);
-  flex: 1;
-}
-.health-val {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  .badge-round {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
 
-.metric-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid rgba(30, 30, 46, 0.3);
-}
-.metric-row .metric-val {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  .badge-status {
+    border: 1px solid;
+  }
 
-.monitor-log {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1.8;
-}
-.log-entry {
-  padding: 2px 0;
-  border-bottom: 1px solid rgba(30, 30, 46, 0.2);
-}
-.log-entry .log-time { color: var(--text-secondary); margin-right: 8px; }
-.log-entry.log-info { color: var(--text-primary); }
-.log-entry.log-warn { color: var(--warning); }
-.log-entry.log-error { color: var(--pink); }
-.log-entry.log-success { color: var(--success); }
-.log-entry.log-inject { color: var(--orange); }
+  .badge-status.started {
+    background: rgba(48, 209, 88, 0.1);
+    border-color: rgba(48, 209, 88, 0.2);
+    color: var(--green);
+  }
 
-.timeline-bar {
-  display: flex;
-  gap: 2px;
-  height: 24px;
-  align-items: flex-end;
-  margin-top: 8px;
-}
-.timeline-tick {
-  flex: 1;
-  background: var(--border);
-  border-radius: 2px;
-  min-height: 4px;
-  transition: height 0.3s, background 0.3s;
-}
-.timeline-tick.ours { background: var(--cyan); }
-.timeline-tick.theirs { background: var(--pink); }
-.timeline-tick.injected { background: var(--orange); }
+  .badge-status.pending {
+    background: rgba(255, 214, 10, 0.1);
+    border-color: rgba(255, 214, 10, 0.2);
+    color: var(--amber);
+  }
 
-/* BOTTOM BAR */
-.bottom-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  height: 50px; padding: 0 24px;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.conn-status {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: var(--text-secondary);
-}
-.conn-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--neutral);
-}
-.conn-dot.connected { background: var(--success); animation: dotPulse 2s ease-in-out infinite; }
-.conn-dot.disconnected { background: var(--pink); }
+  .badge-status.finished {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
 
-.round-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
+  /* ── Info Strip ───────────────────────────────────── */
 
-.phase-track {
-  display: flex; gap: 3px;
-}
-.phase-seg {
-  width: 40px; height: 8px;
-  border-radius: 4px;
-  background: var(--border);
-  transition: background 0.5s;
-  position: relative;
-}
-.phase-seg.active { background: var(--cyan); box-shadow: 0 0 8px rgba(0, 245, 255, 0.4); }
-.phase-seg.done { background: rgba(0, 245, 255, 0.3); }
-.phase-seg-label {
-  position: absolute;
-  bottom: 12px; left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.phase-seg:hover .phase-seg-label { opacity: 1; }
+  .info-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
 
-/* OVERLAYS */
-.overlay {
-  position: fixed; inset: 0;
-  display: none;
-  align-items: center; justify-content: center;
-  z-index: 900;
-}
-.overlay.active { display: flex; }
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
 
-#disconnect-overlay {
-  background: rgba(10, 10, 15, 0.85);
-  backdrop-filter: blur(8px);
-}
-#disconnect-overlay .overlay-content {
-  text-align: center;
-}
-#disconnect-overlay .overlay-content h2 {
-  font-family: var(--font-mono);
-  font-size: 24px;
-  color: var(--pink);
-  margin-bottom: 16px;
-  letter-spacing: 3px;
-  text-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
-}
-.spinner {
-  width: 40px; height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--pink);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-#disconnect-overlay p {
-  font-size: 13px; color: var(--text-secondary);
-}
+  .info-label {
+    color: var(--text-tertiary);
+    font-weight: 400;
+  }
 
-#finish-overlay {
-  background: rgba(10, 10, 15, 0.92);
-  backdrop-filter: blur(12px);
-}
-#finish-overlay .overlay-content {
-  text-align: center;
-  animation: finishFlash 0.6s ease-out;
-}
-#finish-overlay h2 {
-  font-family: var(--font-mono);
-  font-size: 32px;
-  color: var(--success);
-  margin-bottom: 12px;
-  letter-spacing: 4px;
-  text-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
-}
-#finish-overlay .final-stats {
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 2;
-}
-#finish-overlay .final-stats span {
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
+  .info-value {
+    color: var(--text);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
 
-/* ========== ANIMATIONS ========== */
-@keyframes cyanBorderPulse {
-  0%, 100% { box-shadow: inset 0 0 0 1px rgba(0, 245, 255, 0.1); }
-  50% { box-shadow: inset 0 0 0 2px rgba(0, 245, 255, 0.5), 0 0 30px rgba(0, 245, 255, 0.1); }
-}
-@keyframes pinkBorderPulse {
-  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 51, 102, 0.1); }
-  50% { box-shadow: inset 0 0 0 2px rgba(255, 51, 102, 0.5), 0 0 30px rgba(255, 51, 102, 0.1); }
-}
-@keyframes livePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
-  50% { box-shadow: 0 0 12px 2px rgba(255, 51, 102, 0.25); }
-}
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateX(var(--slide-from, 0)); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes timerShake {
-  0%, 95%, 100% { transform: translateX(0); }
-  96% { transform: translateX(-3px); }
-  97% { transform: translateX(3px); }
-  98% { transform: translateX(-2px); }
-  99% { transform: translateX(2px); }
-}
-@keyframes finishFlash {
-  0% { opacity: 0; transform: scale(1.1); }
-  50% { opacity: 1; }
-  100% { transform: scale(1); }
-}
+  .info-value.cyan { color: var(--cyan); }
+  .info-value.rose { color: var(--rose); }
+  .info-value.timer { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+
+  .turn-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .turn-indicator.ours {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+  }
+
+  .turn-indicator.theirs {
+    background: var(--rose-dim);
+    color: var(--rose);
+  }
+
+  .turn-indicator .pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ── Message Area ─────────────────────────────────── */
+
+  .message-area {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .message-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .panel-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .panel-title.ours .dot { background: var(--cyan); }
+  .panel-title.theirs .dot { background: var(--rose); }
+  .panel-title.ours { color: var(--cyan); }
+  .panel-title.theirs { color: var(--rose); }
+
+  .panel-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+
+  .panel-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    scroll-behavior: smooth;
+  }
+
+  .panel-messages::-webkit-scrollbar { width: 4px; }
+  .panel-messages::-webkit-scrollbar-track { background: transparent; }
+  .panel-messages::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  .message-card {
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .message-card.ours {
+    background: var(--cyan-dim);
+    border: 1px solid rgba(50, 215, 255, 0.1);
+  }
+
+  .message-card.theirs {
+    background: var(--rose-dim);
+    border: 1px solid rgba(255, 107, 138, 0.1);
+  }
+
+  .message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* ── Bottom Bar ───────────────────────────────────── */
+
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
+
+  .bottom-left, .bottom-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .stat-value {
+    color: var(--text-secondary);
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .btn-disconnect {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-disconnect:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* ── Log Overlay ──────────────────────────────────── */
+
+  .log-toggle {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .log-toggle:hover { border-color: var(--border-light); color: var(--text); }
+
+  .log-panel {
+    display: none;
+    position: fixed;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: rgba(10, 10, 12, 0.95);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow-y: auto;
+    padding: 12px 24px;
+    z-index: 10;
+  }
+
+  .log-panel.visible { display: block; }
+
+  .log-entry {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-tertiary);
+    white-space: pre-wrap;
+  }
+
+  .log-entry.error { color: var(--red); }
+  .log-entry.warn { color: var(--amber); }
+  .log-entry.info { color: var(--text-secondary); }
 </style>
 </head>
 <body>
 
-<!-- SETUP SCREEN -->
-<div id="setup-screen">
+<!-- ── Setup Screen ──────────────────────────────────── -->
+<div id="setup">
   <div class="setup-card">
-    <h1>AGENT SLAM 2026</h1>
-    <p>Match Monitor — Real-Time Observer</p>
-    <label for="ws-url-input">WebSocket URL</label>
-    <input type="text" id="ws-url-input" placeholder="wss://server.example.com/ws">
-    <label for="team-input">Your Team Name</label>
-    <input type="text" id="team-input" placeholder="team1">
-    <button id="connect-btn">Connect</button>
+    <h1>Agent SLAM 2026</h1>
+    <p class="subtitle">Live match spectator dashboard</p>
+
+    <div class="field">
+      <label>WebSocket URL</label>
+      <input type="text" id="ws-url" placeholder="wss://agent-slam-server.fly.dev/ws?payload=...">
+    </div>
+
+    <div class="field">
+      <label>Your Team</label>
+      <input type="text" id="team-name" placeholder="team1">
+    </div>
+
+    <button class="btn-connect" id="btn-connect" onclick="doConnect()">Connect</button>
+
+    <div class="setup-error" id="setup-error"></div>
   </div>
 </div>
 
-<!-- MAIN SCREEN -->
-<div id="main-screen">
-  <!-- TEST MODE BANNER -->
-  <div class="test-mode-banner" id="test-mode-banner">
-    ⚠ TEST MODE — Manual Perplexity Inject Active — Not for Live Match
-  </div>
+<!-- ── Main Dashboard ────────────────────────────────── -->
+<div id="dashboard">
 
-  <!-- TOP BAR -->
+  <!-- Top Bar -->
   <div class="top-bar">
-    <div class="logo">AGENT SLAM 2026</div>
-    <div class="top-bar-center">
-      <button class="tab-btn active" data-tab="match-tab">Match</button>
-      <button class="tab-btn" data-tab="monitor-tab">Monitor</button>
-      <div class="status-badge" id="status-badge">WAITING</div>
+    <div class="top-left">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="match-topic" id="match-topic">Waiting for match data...</span>
     </div>
-    <div class="top-bar-right">
-      <!-- MODE TOGGLE -->
-      <div class="mode-toggle">
-        <button class="mode-btn active-live" id="btn-live-mode">Live</button>
-        <div class="mode-separator"></div>
-        <button class="mode-btn" id="btn-test-mode">Test</button>
-      </div>
-      <div class="timer" id="timer">--:--</div>
+    <div class="top-right">
+      <span class="badge badge-round" id="badge-round">--</span>
+      <span class="badge badge-phase" id="badge-phase">--</span>
+      <span class="badge badge-status pending" id="badge-status">Connecting</span>
     </div>
   </div>
 
-  <!-- MATCH TAB -->
-  <div class="tab-content active" id="match-tab">
-    <div class="middle">
-      <!-- LEFT: OUR CLAUDE AGENT -->
-      <div class="panel panel-left" id="panel-left">
-        <div class="team-name cyan" id="our-team-name">--</div>
-        <div><span class="stance-badge" id="our-stance">--</span></div>
-        <div class="turn-indicator" id="our-turn-ind">WAITING</div>
-        <div class="stat-row"><span>Messages sent</span><span class="val" id="our-msg-count">0</span></div>
-        <div class="stat-row"><span>Phase</span><span class="val"><span class="phase-badge" id="phase-badge">--</span></span></div>
-        <div class="stat-row"><span>Tokens used</span><span class="val" id="tokens-used">0</span></div>
-        <div class="stat-row"><span>Est. cost</span><span class="val" id="est-cost">$0.00</span></div>
-        <div class="last-arg-label">Last Argument Sent</div>
-        <div class="last-arg cyan-tint" id="our-last-arg">Waiting for match to begin...</div>
+  <!-- Info Strip -->
+  <div class="info-strip">
+    <div class="info-item">
+      <span class="info-label">Us</span>
+      <span class="info-value cyan" id="our-team-label">--</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Stance</span>
+      <span class="info-value cyan" id="our-stance">--</span>
+    </div>
+    <div class="info-item">
+      <span class="info-value timer" id="timer">--:--</span>
+    </div>
+    <div class="info-item">
+      <span class="turn-indicator" id="turn-indicator">
+        <span class="pulse"></span>
+        <span id="turn-text">Waiting</span>
+      </span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Opponent</span>
+      <span class="info-value rose" id="opp-team-label">--</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Stance</span>
+      <span class="info-value rose" id="opp-stance">--</span>
+    </div>
+  </div>
+
+  <!-- Message Panels -->
+  <div class="message-area">
+    <div class="message-panel">
+      <div class="panel-header">
+        <span class="panel-title ours"><span class="dot"></span> Our Arguments</span>
+        <span class="panel-count" id="our-count">0 messages</span>
       </div>
-
-      <!-- CENTER: FEED -->
-      <div class="panel panel-center">
-        <div class="feed-header">Match Feed</div>
-        <div class="feed" id="feed"></div>
+      <div class="panel-messages" id="our-messages">
+        <div class="empty-state">Waiting for match to start...</div>
       </div>
-
-      <!-- RIGHT: PERPLEXITY MANUAL OPPONENT -->
-      <div class="panel panel-right" id="panel-right">
-        <div class="team-name orange" id="opp-team-name">Perplexity</div>
-        <div><span class="stance-badge" id="opp-stance">--</span></div>
-        <div class="turn-indicator" id="opp-turn-ind">WAITING</div>
-        <div class="stat-row"><span>Messages injected</span><span class="val" id="opp-msg-count">0</span></div>
-        <div class="stat-row"><span>Last message</span><span class="val" id="opp-msg-len">--</span></div>
-        <div class="stat-row"><span>Mode</span><span class="val" id="opp-conn">Live Observer</span></div>
-        <div class="last-arg-label">Last Opponent Argument</div>
-        <div class="last-arg pink-tint" id="opp-last-arg">Waiting for opponent...</div>
-
-        <!-- INJECT PANEL — only visible in TEST MODE -->
-        <div class="inject-panel" id="inject-panel">
-          <div class="inject-label">
-            Inject as Perplexity
-            <span class="shortcut-hint">Ctrl+Enter to send</span>
-          </div>
-          <textarea
-            class="inject-textarea"
-            id="inject-textarea"
-            placeholder="Paste Perplexity's counter-argument here, then click Send..."></textarea>
-          <div class="inject-footer">
-            <span class="inject-char-count" id="inject-char-count">0 / 3000</span>
-            <button class="inject-btn" id="inject-btn">Send as Opponent</button>
-          </div>
-          <div class="inject-status" id="inject-status"></div>
-        </div>
-
-        <!-- LOCAL TIMER (TEST MODE only, when server doesn't provide finishTime) -->
-        <div class="inject-panel" id="local-timer-panel" style="margin-top:8px">
-          <div class="inject-label">Local Match Timer</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="number" id="local-timer-duration" value="900" min="30" max="3600"
-              style="width:80px;background:var(--card-bg);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;font-family:inherit;font-size:13px"
-              title="Duration in seconds">
-            <span style="color:var(--text-secondary);font-size:11px">sec</span>
-            <button onclick="startLocalTimer()" class="inject-btn" style="flex:1">Start Timer</button>
-          </div>
-          <div style="color:var(--text-secondary);font-size:10px;margin-top:4px">
-            Use when sandbox server doesn't send a match duration.
-          </div>
-        </div>
+    </div>
+    <div class="message-panel">
+      <div class="panel-header">
+        <span class="panel-title theirs"><span class="dot"></span> Opponent Arguments</span>
+        <span class="panel-count" id="opp-count">0 messages</span>
+      </div>
+      <div class="panel-messages" id="opp-messages">
+        <div class="empty-state">Waiting for match to start...</div>
       </div>
     </div>
   </div>
 
-  <!-- MONITOR TAB -->
-  <div class="tab-content" id="monitor-tab">
-    <div class="monitor-grid">
-      <!-- HEALTH STATUS -->
-      <div class="monitor-card">
-        <h3>System Health</h3>
-        <div class="health-grid">
-          <div class="health-item">
-            <div class="health-dot unknown" id="health-ws"></div>
-            <span class="health-label">WebSocket</span>
-            <span class="health-val" id="health-ws-val">--</span>
-          </div>
-          <div class="health-item">
-            <div class="health-dot unknown" id="health-api"></div>
-            <span class="health-label">API</span>
-            <span class="health-val" id="health-api-val">--</span>
-          </div>
-          <div class="health-item">
-            <div class="health-dot unknown" id="health-turn"></div>
-            <span class="health-label">Turn Exec</span>
-            <span class="health-val" id="health-turn-val">--</span>
-          </div>
-          <div class="health-item">
-            <div class="health-dot unknown" id="health-match"></div>
-            <span class="health-label">Match</span>
-            <span class="health-val" id="health-match-val">--</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- TIMING METRICS -->
-      <div class="monitor-card">
-        <h3>Timing Metrics</h3>
-        <div class="metric-row"><span>Avg response time</span><span class="metric-val" id="m-avg-resp">--</span></div>
-        <div class="metric-row"><span>Last response time</span><span class="metric-val" id="m-last-resp">--</span></div>
-        <div class="metric-row"><span>Time on current turn</span><span class="metric-val" id="m-turn-time">--</span></div>
-        <div class="metric-row"><span>Reconnect count</span><span class="metric-val" id="m-reconnects">0</span></div>
-        <div class="metric-row"><span>Messages dropped</span><span class="metric-val" id="m-drops">0</span></div>
-      </div>
-
-      <!-- MESSAGE QUALITY -->
-      <div class="monitor-card">
-        <h3>Message Quality</h3>
-        <div class="metric-row"><span>Avg char count (ours)</span><span class="metric-val" id="m-avg-chars">--</span></div>
-        <div class="metric-row"><span>Last char count</span><span class="metric-val" id="m-last-chars">--</span></div>
-        <div class="metric-row"><span>Over-limit trims</span><span class="metric-val" id="m-trims">0</span></div>
-        <div class="metric-row"><span>Fallbacks used</span><span class="metric-val" id="m-fallbacks">0</span></div>
-        <div class="metric-row"><span>Unique sources cited</span><span class="metric-val" id="m-sources">0</span></div>
-      </div>
-
-      <!-- MESSAGE TIMELINE -->
-      <div class="monitor-card span-full">
-        <h3>Message Timeline</h3>
-        <div class="timeline-bar" id="timeline-bar"></div>
-      </div>
-
-      <!-- EVENT LOG -->
-      <div class="monitor-card span-full" style="min-height: 200px;">
-        <h3>Live Event Log</h3>
-        <div class="monitor-log" id="monitor-log"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOM BAR -->
+  <!-- Bottom Bar -->
   <div class="bottom-bar">
-    <div class="conn-status">
-      <div class="conn-dot" id="conn-dot"></div>
-      <span id="conn-text">Disconnected</span>
+    <div class="bottom-left">
+      <div class="stat">Messages <span class="stat-value" id="stat-total">0</span></div>
+      <div class="stat">Avg chars <span class="stat-value" id="stat-avg-chars">--</span></div>
+      <div class="stat">Est. cost <span class="stat-value" id="stat-cost">$0.00</span></div>
     </div>
-    <div class="round-name" id="round-name">--</div>
-    <div class="phase-track" id="phase-track">
-      <div class="phase-seg" data-phase="opening"><span class="phase-seg-label">Open</span></div>
-      <div class="phase-seg" data-phase="rebuttal_first"><span class="phase-seg-label">Rebut</span></div>
-      <div class="phase-seg" data-phase="cross_examination"><span class="phase-seg-label">Cross</span></div>
-      <div class="phase-seg" data-phase="defense"><span class="phase-seg-label">Defend</span></div>
-      <div class="phase-seg" data-phase="closing"><span class="phase-seg-label">Close</span></div>
+    <div class="bottom-right">
+      <button class="log-toggle" onclick="toggleLog()">Event Log</button>
+      <button class="btn-disconnect" onclick="doDisconnect()">Disconnect</button>
     </div>
   </div>
-</div>
 
-<!-- OVERLAYS -->
-<div class="overlay" id="disconnect-overlay">
-  <div class="overlay-content">
-    <div class="spinner"></div>
-    <h2>CONNECTION LOST</h2>
-    <p>Attempting to reconnect...</p>
-  </div>
-</div>
-
-<div class="overlay" id="finish-overlay">
-  <div class="overlay-content">
-    <h2>MATCH COMPLETE</h2>
-    <div class="final-stats" id="final-stats"></div>
-  </div>
+  <!-- Log Panel -->
+  <div class="log-panel" id="log-panel"></div>
 </div>
 
 <script>
-const CONFIG = {
-  WS_URL: "",
-  TEAM_NAME: "",
-};
+(function() {
+  "use strict";
 
-const OPPONENT_NAME = "Perplexity";
+  // ── State ──────────────────────────────────────────
+  let ws = null;
+  let teamName = "";
+  let finishTimeMs = 0;
+  let timerInterval = null;
+  let ourMessageCount = 0;
+  let oppMessageCount = 0;
+  let totalChars = 0;
+  let matchStatus = "pending";
+  let currentTurn = "";
+  let pros = "";
+  let cons = "";
 
-const PHASES_ORDER = ["opening", "rebuttal_first", "cross_examination", "defense", "closing"];
-const PHASE_LABELS = {
-  opening: "OPENING",
-  rebuttal_first: "REBUTTAL",
-  cross_examination: "CROSS-EXAM",
-  defense: "DEFENSE",
-  closing: "CLOSING",
-};
+  // ── Helpers ────────────────────────────────────────
+  function $(id) { return document.getElementById(id); }
 
-const state = {
-  team1: "", team2: "", topic: "", description: "", round: "",
-  finishTime: 0, pros: "", cons: "", turn: "", status: "pending",
-  conversation: [], ourTeam: "", messageCount: 0, oppMessageCount: 0,
-  connected: false, lastPhase: "",
-  testMode: false,
-  injectCount: 0,
-};
-
-const monitor = {
-  responseTimes: [],
-  lastTurnStart: 0,
-  reconnectCount: 0,
-  droppedMessages: 0,
-  trimCount: 0,
-  fallbackCount: 0,
-  ourCharCounts: [],
-  citedSources: new Set(),
-  events: [],
-  lastInjectText: "",
-  lastInjectTime: 0,
-};
-
-let ws = null;
-let timerInterval = null;
-
-const $ = (id) => document.getElementById(id);
-
-function isSameTeam(a, b) {
-  if (!a || !b) return false;
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-// ===== TAB SWITCHING =====
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-    btn.classList.add("active");
-    $(btn.dataset.tab).classList.add("active");
-  });
-});
-
-// ===== TEST MODE TOGGLE =====
-function setTestMode(enabled) {
-  state.testMode = enabled;
-
-  $("btn-live-mode").className = "mode-btn" + (enabled ? "" : " active-live");
-  $("btn-test-mode").className = "mode-btn" + (enabled ? " active-test" : "");
-
-  $("test-mode-banner").classList.toggle("visible", enabled);
-  $("inject-panel").classList.toggle("visible", enabled);
-  $("local-timer-panel").classList.toggle("visible", enabled);
-  $("panel-right").classList.toggle("test-mode-active", enabled);
-
-  $("opp-conn").textContent = enabled ? "Manual (Test)" : "Live Observer";
-
-  monitorLog(enabled ? "inject" : "info",
-    enabled ? "TEST MODE ON — Perplexity inject panel active" : "LIVE MODE — inject panel hidden");
-}
-
-$("btn-live-mode").addEventListener("click", () => setTestMode(false));
-$("btn-test-mode").addEventListener("click", () => setTestMode(true));
-
-function startLocalTimer() {
-  const secs = parseInt($("local-timer-duration").value) || 900;
-  state.finishTime = Date.now() + secs * 1000;
-  startTimer();
-  monitorLog("inject", "Local timer started: " + secs + "s");
-}
-
-// ===== INJECT LOGIC =====
-const injectTextarea = $("inject-textarea");
-const injectBtn = $("inject-btn");
-const injectCharCount = $("inject-char-count");
-const injectStatus = $("inject-status");
-
-injectTextarea.addEventListener("input", () => {
-  const len = injectTextarea.value.length;
-  injectCharCount.textContent = len + " / 3000";
-  injectCharCount.className = "inject-char-count" + (len > 3000 ? " over" : len > 2500 ? " warn" : "");
-  injectBtn.disabled = len === 0 || len > 3000;
-});
-
-injectTextarea.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.key === "Enter") {
-    e.preventDefault();
-    if (!injectBtn.disabled) injectOpponentMessage();
-  }
-});
-
-injectBtn.addEventListener("click", injectOpponentMessage);
-
-function injectOpponentMessage() {
-  const msg = injectTextarea.value.trim();
-  if (!msg) return;
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    showInjectStatus("error", "Not connected to WebSocket");
-    return;
+  function isSameTeam(a, b) {
+    return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
   }
 
-  // FIX: sandbox server only accepts "sandbox-message" type, not "debate-message"
-  const payload = {
-    type: "sandbox-message",
-    data: { message: msg },
-  };
-
-  try {
-    ws.send(JSON.stringify(payload));
-    state.injectCount++;
-
-    // Immediately reflect in UI so you don't wait for echo
-    state.conversation.push({
-      team: OPPONENT_NAME,
-      message: msg,
-      timestamp: String(Date.now()),
-      isOurs: false,
-      injected: true,
-    });
-    state.oppMessageCount++;
-    $("opp-last-arg").textContent = msg;
-    $("opp-msg-len").textContent = msg.length + " chars";
-    addChatMsg(msg, false, OPPONENT_NAME, true);
-    updateAll();
-
-    monitorLog("inject", "Injected opponent msg: " + msg.length + " chars — agent turn triggered");
-    showInjectStatus("sent", "Sent! Agent is generating response...");
-    injectTextarea.value = "";
-    injectCharCount.textContent = "0 / 3000";
-    injectCharCount.className = "inject-char-count";
-    injectBtn.disabled = true;
-
-    // Track inject so we can suppress the sandbox echo
-    monitor.lastInjectText = msg;
-    monitor.lastInjectTime = Date.now();
-
-    // Reset turn start for response time tracking
-    monitor.lastTurnStart = Date.now();
-
-  } catch (e) {
-    showInjectStatus("error", "Send failed: " + e.message);
-    monitorLog("error", "Inject failed: " + e.message);
-  }
-}
-
-function showInjectStatus(type, msg) {
-  injectStatus.textContent = msg;
-  injectStatus.className = "inject-status " + type;
-  if (type === "sent") {
-    setTimeout(() => {
-      injectStatus.textContent = "";
-      injectStatus.className = "inject-status";
-    }, 4000);
-  }
-}
-
-// ===== MONITOR LOGGING =====
-function monitorLog(level, msg) {
-  const time = new Date().toLocaleTimeString("en-US", { hour12: false });
-  const entry = { time, level, msg };
-  monitor.events.push(entry);
-  if (monitor.events.length > 200) monitor.events.shift();
-
-  const log = $("monitor-log");
-  if (!log) return;
-  const div = document.createElement("div");
-  div.className = "log-entry log-" + level;
-  div.innerHTML = '<span class="log-time">' + time + '</span>' + msg;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
-
-// ===== MONITOR UPDATE =====
-function updateMonitor() {
-  const wsDot = $("health-ws");
-  const wsVal = $("health-ws-val");
-  if (state.connected) {
-    wsDot.className = "health-dot ok";
-    wsVal.textContent = "Connected";
-  } else {
-    wsDot.className = "health-dot error";
-    wsVal.textContent = "Disconnected";
+  function formatTime(ms) {
+    if (ms <= 0) return "00:00";
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
   }
 
-  const matchDot = $("health-match");
-  const matchVal = $("health-match-val");
-  if (state.status === "started") {
-    matchDot.className = "health-dot ok";
-    matchVal.textContent = "Live";
-  } else if (state.status === "paused") {
-    matchDot.className = "health-dot warn";
-    matchVal.textContent = "Paused";
-  } else if (state.status === "completed") {
-    matchDot.className = "health-dot ok";
-    matchVal.textContent = "Finished";
-  } else {
-    matchDot.className = "health-dot unknown";
-    matchVal.textContent = "Waiting";
+  function timeNow() {
+    return new Date().toLocaleTimeString("en-GB", { hour12: false });
   }
 
-  const avgResp = monitor.responseTimes.length > 0
-    ? (monitor.responseTimes.reduce((a, b) => a + b, 0) / monitor.responseTimes.length).toFixed(1) + "s"
-    : "--";
-  $("m-avg-resp").textContent = avgResp;
-
-  const lastResp = monitor.responseTimes.length > 0
-    ? monitor.responseTimes[monitor.responseTimes.length - 1].toFixed(1) + "s"
-    : "--";
-  $("m-last-resp").textContent = lastResp;
-
-  $("m-reconnects").textContent = monitor.reconnectCount;
-  $("m-drops").textContent = monitor.droppedMessages;
-
-  const avgChars = monitor.ourCharCounts.length > 0
-    ? Math.round(monitor.ourCharCounts.reduce((a, b) => a + b, 0) / monitor.ourCharCounts.length)
-    : "--";
-  $("m-avg-chars").textContent = avgChars;
-
-  const lastChars = monitor.ourCharCounts.length > 0
-    ? monitor.ourCharCounts[monitor.ourCharCounts.length - 1]
-    : "--";
-  $("m-last-chars").textContent = lastChars;
-
-  $("m-trims").textContent = monitor.trimCount;
-  $("m-fallbacks").textContent = monitor.fallbackCount;
-  $("m-sources").textContent = monitor.citedSources.size;
-
-  const apiDot = $("health-api");
-  const apiVal = $("health-api-val");
-  if (monitor.fallbackCount > 0) {
-    apiDot.className = "health-dot warn";
-    apiVal.textContent = monitor.fallbackCount + " fallback(s)";
-  } else if (state.messageCount > 0) {
-    apiDot.className = "health-dot ok";
-    apiVal.textContent = "OK";
-  } else {
-    apiDot.className = "health-dot unknown";
-    apiVal.textContent = "--";
+  function escapeHtml(text) {
+    const d = document.createElement("div");
+    d.textContent = text;
+    return d.innerHTML;
   }
 
-  const turnDot = $("health-turn");
-  const turnVal = $("health-turn-val");
-  if (monitor.responseTimes.length > 0) {
-    const last = monitor.responseTimes[monitor.responseTimes.length - 1];
-    if (last > 60) {
-      turnDot.className = "health-dot error";
-      turnVal.textContent = "Slow (" + last.toFixed(0) + "s)";
-    } else if (last > 30) {
-      turnDot.className = "health-dot warn";
-      turnVal.textContent = last.toFixed(1) + "s";
-    } else {
-      turnDot.className = "health-dot ok";
-      turnVal.textContent = last.toFixed(1) + "s";
-    }
-  } else {
-    turnDot.className = "health-dot unknown";
-    turnVal.textContent = "--";
-  }
-
-  updateTimeline();
-}
-
-function updateTimeline() {
-  const bar = $("timeline-bar");
-  bar.innerHTML = "";
-  const maxMsgs = Math.max(state.conversation.length, 10);
-  for (let i = 0; i < maxMsgs; i++) {
-    const tick = document.createElement("div");
-    tick.className = "timeline-tick";
-    if (i < state.conversation.length) {
-      const msg = state.conversation[i];
-      if (msg.isOurs) tick.classList.add("ours");
-      else if (msg.injected) tick.classList.add("injected");
-      else tick.classList.add("theirs");
-      const charLen = (msg.message || "").length;
-      const height = Math.max(4, Math.min(24, Math.round(charLen / 3000 * 24)));
-      tick.style.height = height + "px";
-    }
-    bar.appendChild(tick);
-  }
-}
-
-function extractSources(text) {
-  const urls = text.match(/https?:\/\/[^\s\)]+/g) || [];
-  urls.forEach(u => monitor.citedSources.add(u));
-}
-
-// ===== SETUP =====
-function initSetup() {
-  const savedUrl = localStorage.getItem("slam_ws_url") || "";
-  const savedTeam = localStorage.getItem("slam_team") || "";
-  $("ws-url-input").value = savedUrl;
-  $("team-input").value = savedTeam;
-
-  // Auto-connect if credentials already saved (handles page reload)
-  if (savedUrl && savedTeam) {
-    CONFIG.WS_URL = savedUrl;
-    CONFIG.TEAM_NAME = savedTeam;
-    state.ourTeam = savedTeam;
-    $("setup-screen").classList.add("hidden");
-    $("main-screen").classList.add("active");
-    $("our-team-name").textContent = savedTeam;
-    connectWS();
-    return;
-  }
-
-  $("connect-btn").addEventListener("click", () => {
-    const url = $("ws-url-input").value.trim();
-    const team = $("team-input").value.trim();
-    if (!url || !team) return;
-    CONFIG.WS_URL = url;
-    CONFIG.TEAM_NAME = team;
-    state.ourTeam = team;
-    localStorage.setItem("slam_ws_url", url);
-    localStorage.setItem("slam_team", team);
-    $("setup-screen").classList.add("hidden");
-    $("main-screen").classList.add("active");
-    $("our-team-name").textContent = team;
-    connectWS();
-  });
-}
-
-// ===== WEBSOCKET =====
-function connectWS() {
-  try { ws = new WebSocket(CONFIG.WS_URL); } catch (e) { return; }
-
-  ws.onopen = () => {
-    state.connected = true;
-    updateConnStatus(true);
-    $("disconnect-overlay").classList.remove("active");
-    addSystemMsg("Connected to match server");
-    monitorLog("success", "WebSocket connected to " + CONFIG.WS_URL);
-    updateMonitor();
-  };
-
-  ws.onclose = () => {
-    state.connected = false;
-    updateConnStatus(false);
-    monitorLog("error", "WebSocket disconnected");
-    if (state.status !== "completed") {
-      monitor.reconnectCount++;
-      $("disconnect-overlay").classList.add("active");
-      monitorLog("warn", "Reconnecting in 3s (attempt " + monitor.reconnectCount + ")");
-      setTimeout(connectWS, 3000);
-    }
-    updateMonitor();
-  };
-
-  ws.onerror = () => {
-    monitorLog("error", "WebSocket error occurred");
-  };
-
-  ws.onmessage = (event) => {
+  // ── Persistence ────────────────────────────────────
+  function saveConfig() {
     try {
-      const parsed = JSON.parse(event.data);
-      handleMessage(parsed);
-    } catch (e) {
-      monitorLog("error", "Failed to parse message: " + e.message);
-    }
+      localStorage.setItem("slam_ws_url", $("ws-url").value);
+      localStorage.setItem("slam_team", $("team-name").value);
+    } catch(e) {}
+  }
+
+  function loadConfig() {
+    try {
+      const url = localStorage.getItem("slam_ws_url");
+      const team = localStorage.getItem("slam_team");
+      if (url) $("ws-url").value = url;
+      if (team) $("team-name").value = team;
+    } catch(e) {}
+  }
+
+  // ── Logging ────────────────────────────────────────
+  function addLog(msg, level) {
+    const panel = $("log-panel");
+    const entry = document.createElement("div");
+    entry.className = "log-entry " + (level || "info");
+    entry.textContent = timeNow() + "  " + msg;
+    panel.appendChild(entry);
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  window.toggleLog = function() {
+    $("log-panel").classList.toggle("visible");
   };
-}
 
-// ===== MESSAGE ROUTER =====
-function handleMessage(parsed) {
-  const type = parsed.type;
-  const data = parsed.data || {};
+  // ── Connection ─────────────────────────────────────
+  window.doConnect = function() {
+    const url = $("ws-url").value.trim();
+    teamName = $("team-name").value.trim();
 
-  switch (type) {
-    case "welcome":
-      addSystemMsg(data.message || "Welcome");
-      monitorLog("info", "Server welcome: " + (data.message || ""));
-      break;
-    case "match-state":
-      handleMatchState(data);
-      monitorLog("info", "Match state: turn=" + (data.turn || "--") + " status=" + (data.status || "--"));
-      break;
-    case "match-update":
-      handleMatchUpdate(data);
-      monitorLog("success", "Match started");
-      break;
-    case "debate-message":
-      handleDebateMessage(parsed);
-      break;
-    case "sandbox-message":
-      handleSandboxMessage(parsed);
-      break;
-    case "match-paused":
-      state.status = "paused";
-      updateStatusBadge();
-      addSystemMsg("Match paused");
-      monitorLog("warn", "Match paused by server");
-      break;
-    case "match-resumed":
-      handleMatchResumed(data);
-      monitorLog("success", "Match resumed");
-      break;
-    case "match-finish":
-      handleMatchFinish();
-      monitorLog("success", "Match finished");
-      break;
-    case "previous-message":
-      handlePreviousMessages(data);
-      monitorLog("info", "Loaded previous messages");
-      break;
-    case "error":
-      addSystemMsg("Error: " + (data.message || "Unknown"));
-      monitorLog("error", "Server error: " + (data.message || "Unknown"));
-      break;
-    case "info":
-      addSystemMsg(data.message || "Info");
-      monitorLog("info", "Server: " + (data.message || ""));
-      break;
-  }
-  updateMonitor();
-}
+    if (!url) { showSetupError("Enter a WebSocket URL"); return; }
+    if (!teamName) { showSetupError("Enter your team name"); return; }
 
-// ===== HANDLERS =====
-function handleMatchState(data) {
-  state.team1 = data.team1 || state.team1;
-  state.team2 = data.team2 || state.team2;
-  state.topic = data.topic || state.topic;
-  state.description = data.description || state.description;
-  state.round = data.round || state.round;
-  state.finishTime = data.finishTime || state.finishTime;
-  state.pros = data.pros || state.pros;
-  state.cons = data.cons || state.cons;
-  state.turn = data.turn || state.turn;
-  state.status = data.status || state.status;
+    $("btn-connect").disabled = true;
+    $("btn-connect").textContent = "Connecting...";
+    hideSetupError();
+    saveConfig();
 
-  const isOurTurn = isSameTeam(state.turn, state.ourTeam);
-  if (isOurTurn && state.status === "started") {
-    monitor.lastTurnStart = Date.now();
-  }
-  updateAll();
-}
-
-function handleMatchUpdate(data) {
-  state.finishTime = data.finishTime || state.finishTime;
-  state.status = "started";
-  addSystemMsg("Match started!");
-  updateAll();
-  startTimer();
-}
-
-function handleDebateMessage(parsed) {
-  const team = parsed.from;
-  const msg = (parsed.data || {}).message || "";
-  const ts = parsed.timestamp || "";
-  const isOurs = isSameTeam(team, state.ourTeam);
-
-  // In test mode, skip echoed inject messages (already added locally)
-  const isInjectedEcho = state.testMode && isSameTeam(team, OPPONENT_NAME);
-
-  if (!isInjectedEcho) {
-    state.conversation.push({ team, message: msg, timestamp: ts, isOurs });
-  }
-
-  if (isOurs) {
-    state.messageCount++;
-    $("our-last-arg").textContent = msg;
-    monitor.ourCharCounts.push(msg.length);
-    extractSources(msg);
-    monitorLog("success", "Our argument sent: " + msg.length + " chars (phase: " + getPhase() + ")");
-
-    if (monitor.lastTurnStart > 0) {
-      const elapsed = (Date.now() - monitor.lastTurnStart) / 1000;
-      monitor.responseTimes.push(elapsed);
-      monitorLog("info", "Response time: " + elapsed.toFixed(1) + "s");
-      monitor.lastTurnStart = 0;
+    try {
+      ws = new WebSocket(url);
+    } catch(e) {
+      showSetupError("Invalid URL: " + e.message);
+      $("btn-connect").disabled = false;
+      $("btn-connect").textContent = "Connect";
+      return;
     }
 
-    addChatMsg(msg, true, team, false);
-  } else if (!isInjectedEcho) {
-    state.oppMessageCount++;
-    $("opp-last-arg").textContent = msg;
-    $("opp-msg-len").textContent = msg.length + " chars";
-    monitorLog("info", "Opponent argued: " + msg.length + " chars");
-    monitor.lastTurnStart = Date.now();
-    addChatMsg(msg, false, team, false);
+    ws.onopen = function() {
+      addLog("WebSocket connected", "info");
+      $("setup").style.display = "none";
+      $("dashboard").style.display = "flex";
+      $("status-dot").className = "status-dot";
+      updateStatusBadge("pending");
+      $("our-team-label").textContent = teamName;
+      startTimer();
+    };
+
+    ws.onmessage = function(event) {
+      try {
+        const msg = JSON.parse(event.data);
+        handleMessage(msg);
+      } catch(e) {
+        addLog("Parse error: " + e.message, "error");
+      }
+    };
+
+    ws.onerror = function() {
+      addLog("WebSocket error", "error");
+      showSetupError("Connection failed. Check URL and try again.");
+      $("btn-connect").disabled = false;
+      $("btn-connect").textContent = "Connect";
+    };
+
+    ws.onclose = function(event) {
+      addLog("Disconnected (code " + event.code + ")", "warn");
+      $("status-dot").className = "status-dot disconnected";
+      updateStatusBadge("disconnected");
+    };
+  };
+
+  window.doDisconnect = function() {
+    if (ws) { ws.close(); ws = null; }
+    stopTimer();
+    $("dashboard").style.display = "none";
+    $("setup").style.display = "flex";
+    $("btn-connect").disabled = false;
+    $("btn-connect").textContent = "Connect";
+    resetState();
+  };
+
+  function resetState() {
+    ourMessageCount = 0;
+    oppMessageCount = 0;
+    totalChars = 0;
+    matchStatus = "pending";
+    currentTurn = "";
+    finishTimeMs = 0;
+    $("our-messages").innerHTML = '<div class="empty-state">Waiting for match to start...</div>';
+    $("opp-messages").innerHTML = '<div class="empty-state">Waiting for match to start...</div>';
+    $("our-count").textContent = "0 messages";
+    $("opp-count").textContent = "0 messages";
+    $("stat-total").textContent = "0";
+    $("stat-avg-chars").textContent = "--";
+    $("stat-cost").textContent = "$0.00";
+    $("log-panel").innerHTML = "";
   }
 
-  updateAll();
-}
-
-function handleSandboxMessage(parsed) {
-  // Sandbox echo of our own message — update left panel
-  const msg = (parsed.data || {}).message || "";
-  if (!msg) return;
-
-  // Suppress echo of injected opponent messages (sandbox server bounces them back)
-  const isInjectEcho = msg === monitor.lastInjectText && (Date.now() - monitor.lastInjectTime) < 5000;
-  if (isInjectEcho) {
-    monitorLog("info", "Sandbox echo (inject suppressed)");
-    return;
+  function showSetupError(msg) {
+    const el = $("setup-error");
+    el.textContent = msg;
+    el.style.display = "block";
   }
 
-  $("our-last-arg").textContent = msg;
-  monitorLog("info", "Sandbox echo: " + msg.length + " chars");
-  monitor.ourCharCounts.push(msg.length);
-  extractSources(msg);
-
-  if (monitor.lastTurnStart > 0) {
-    const elapsed = (Date.now() - monitor.lastTurnStart) / 1000;
-    monitor.responseTimes.push(elapsed);
-    monitorLog("info", "Response time: " + elapsed.toFixed(1) + "s");
-    monitor.lastTurnStart = 0;
+  function hideSetupError() {
+    $("setup-error").style.display = "none";
   }
 
-  state.messageCount++;
-  state.conversation.push({
-    team: state.ourTeam,
-    message: msg,
-    timestamp: String(Date.now()),
-    isOurs: true,
-  });
-  addChatMsg(msg, true, state.ourTeam, false);
-  updateAll();
-}
+  // ── Message Router ─────────────────────────────────
+  function handleMessage(msg) {
+    const type = msg.type || "";
+    const data = msg.data || {};
+    const from = msg.from || "";
 
-function handleMatchResumed(data) {
-  if (data.finishTime) state.finishTime = data.finishTime;
-  state.status = "started";
-  addSystemMsg("Match resumed");
-  updateAll();
-  startTimer();
-}
+    switch(type) {
+      case "welcome":
+        addLog("Server: " + (data.message || "Welcome"), "info");
+        break;
 
-function handleMatchFinish() {
-  state.status = "completed";
-  updateAll();
-  if (timerInterval) clearInterval(timerInterval);
+      case "match-state":
+        handleMatchState(data);
+        break;
 
-  const stats = $("final-stats");
-  stats.innerHTML =
-    '<p>Topic: <span>' + state.topic + '</span></p>' +
-    '<p>Our team: <span>' + state.ourTeam + '</span> (' + getOurStance() + ')</p>' +
-    '<p>Messages sent: <span>' + state.messageCount + '</span></p>' +
-    '<p>Opponent messages: <span>' + state.oppMessageCount + '</span></p>' +
-    '<p>Injected messages: <span>' + state.injectCount + '</span></p>' +
-    '<p>Total exchanges: <span>' + state.conversation.length + '</span></p>';
-  $("finish-overlay").classList.add("active");
-}
+      case "match-update":
+        handleMatchUpdate(data);
+        break;
 
-function handlePreviousMessages(data) {
-  const convs = data.conversations || [];
-  convs.forEach((entry) => {
-    const isOurs = isSameTeam(entry.team, state.ourTeam);
-    state.conversation.push({
-      team: entry.team || "",
-      message: entry.message || "",
-      timestamp: entry.timestamp || "",
-      isOurs,
-    });
+      case "debate-message":
+        handleDebateMessage(from, data, msg.timestamp);
+        break;
+
+      case "sandbox-message":
+        handleDebateMessage(from, data, msg.timestamp);
+        break;
+
+      case "previous-message":
+        handlePreviousMessages(data);
+        break;
+
+      case "match-paused":
+        matchStatus = "paused";
+        updateStatusBadge("paused");
+        addLog("Match paused", "warn");
+        break;
+
+      case "match-resumed":
+        matchStatus = "started";
+        if (data.finishTime) finishTimeMs = data.finishTime;
+        updateStatusBadge("started");
+        addLog("Match resumed", "info");
+        break;
+
+      case "match-finish":
+        matchStatus = "finished";
+        updateStatusBadge("finished");
+        addLog("Match finished", "info");
+        break;
+
+      case "error":
+        addLog("Server error: " + (data.message || JSON.stringify(data)), "error");
+        break;
+
+      case "info":
+        addLog("Server: " + (data.message || ""), "info");
+        break;
+
+      default:
+        addLog("Unknown: " + type + " " + JSON.stringify(data).substring(0, 80), "warn");
+    }
+  }
+
+  // ── Handlers ───────────────────────────────────────
+  function handleMatchState(data) {
+    if (data.topic) $("match-topic").textContent = data.topic;
+    if (data.round) $("badge-round").textContent = data.round;
+    if (data.finishTime) finishTimeMs = data.finishTime;
+    if (data.status) {
+      matchStatus = data.status;
+      updateStatusBadge(data.status);
+    }
+    if (data.turn) {
+      currentTurn = data.turn;
+      updateTurnIndicator();
+    }
+    if (data.pros) pros = data.pros;
+    if (data.cons) cons = data.cons;
+
+    updateStances();
+    updatePhase();
+    addLog("State: turn=" + (data.turn||"?") + " status=" + (data.status||"?"), "info");
+  }
+
+  function handleMatchUpdate(data) {
+    if (data.finishTime) finishTimeMs = data.finishTime;
+    matchStatus = "started";
+    updateStatusBadge("started");
+    addLog("Match started. Timer running.", "info");
+  }
+
+  function handleDebateMessage(from, data, timestamp) {
+    const text = data.message || "";
+    const isOurs = isSameTeam(from, teamName);
+    const charCount = text.length;
+
     if (isOurs) {
-      state.messageCount++;
-      monitor.ourCharCounts.push((entry.message || "").length);
-      extractSources(entry.message || "");
-    } else state.oppMessageCount++;
-    addChatMsg(entry.message || "", isOurs, entry.team || "", false);
-  });
-  addSystemMsg("Loaded " + convs.length + " previous messages");
-  updateAll();
-}
+      ourMessageCount++;
+      totalChars += charCount;
+      appendMessage("our-messages", text, charCount, ourMessageCount, true);
+      $("our-count").textContent = ourMessageCount + " message" + (ourMessageCount !== 1 ? "s" : "");
+    } else {
+      oppMessageCount++;
+      appendMessage("opp-messages", text, charCount, oppMessageCount, false);
+      $("opp-count").textContent = oppMessageCount + " message" + (oppMessageCount !== 1 ? "s" : "");
+    }
 
-// ===== UI UPDATES =====
-function updateAll() {
-  updateTeams();
-  updateStatusBadge();
-  updateTurnIndicators();
-  updatePhase();
-  updateStats();
-  updatePhaseTrack();
-  $("round-name").textContent = state.round || "--";
-  updateMonitor();
-}
+    const total = ourMessageCount + oppMessageCount;
+    $("stat-total").textContent = total;
+    if (ourMessageCount > 0) {
+      $("stat-avg-chars").textContent = Math.round(totalChars / ourMessageCount);
+    }
 
-function updateTeams() {
-  const oppStance = getOurStance() === "PRO" ? "CON" : "PRO";
+    // Rough cost estimate: ~$0.38 per 10-turn match
+    const estCost = ourMessageCount * 0.038;
+    $("stat-cost").textContent = "$" + estCost.toFixed(2);
 
-  const ourBadge = $("our-stance");
-  const ourStance = getOurStance();
-  ourBadge.textContent = ourStance;
-  ourBadge.className = "stance-badge " + (ourStance === "PRO" ? "pro" : "con");
-
-  const oppBadge = $("opp-stance");
-  oppBadge.textContent = oppStance;
-  oppBadge.className = "stance-badge " + (oppStance === "PRO" ? "pro" : "con");
-
-  $("opp-conn").textContent = state.testMode ? "Manual (Test)" : (state.status === "started" ? "Active" : state.status);
-}
-
-function updateStatusBadge() {
-  const badge = $("status-badge");
-  badge.className = "status-badge";
-  if (state.status === "started") {
-    badge.textContent = "LIVE";
-    badge.classList.add("live");
-  } else if (state.status === "paused") {
-    badge.textContent = "PAUSED";
-    badge.classList.add("paused");
-  } else if (state.status === "completed") {
-    badge.textContent = "FINISHED";
-    badge.classList.add("finished");
-  } else {
-    badge.textContent = "WAITING";
-  }
-}
-
-function updateTurnIndicators() {
-  const isOurTurn = isSameTeam(state.turn, state.ourTeam) && state.status === "started";
-  const isTheirTurn = state.turn && !isSameTeam(state.turn, state.ourTeam) && state.status === "started";
-
-  const ourInd = $("our-turn-ind");
-  ourInd.textContent = isOurTurn ? "OUR TURN" : "WAITING";
-  ourInd.className = "turn-indicator" + (isOurTurn ? " active-cyan" : "");
-
-  const oppInd = $("opp-turn-ind");
-  if (state.testMode) {
-    oppInd.textContent = "PASTE & SEND";
-    oppInd.className = "turn-indicator active-orange";
-  } else {
-    oppInd.textContent = isTheirTurn ? "THEIR TURN" : "WAITING";
-    oppInd.className = "turn-indicator" + (isTheirTurn ? " active-pink" : "");
+    updatePhase();
+    addLog((isOurs ? "US" : "OPP") + " #" + (isOurs ? ourMessageCount : oppMessageCount) + ": " + charCount + " chars", "info");
   }
 
-  $("panel-left").classList.toggle("our-turn", isOurTurn);
-  $("panel-right").classList.toggle("their-turn", isTheirTurn && !state.testMode);
-}
+  function handlePreviousMessages(data) {
+    const conversations = data.conversations || [];
+    conversations.forEach(function(entry) {
+      const isOurs = isSameTeam(entry.team, teamName);
+      const text = entry.message || "";
+      if (isOurs) {
+        ourMessageCount++;
+        totalChars += text.length;
+        appendMessage("our-messages", text, text.length, ourMessageCount, true);
+      } else {
+        oppMessageCount++;
+        appendMessage("opp-messages", text, text.length, oppMessageCount, false);
+      }
+    });
 
-function updatePhase() {
-  const phase = getPhase();
-  const badge = $("phase-badge");
-  const label = PHASE_LABELS[phase] || phase.toUpperCase();
-
-  if (state.lastPhase && state.lastPhase !== phase) {
-    badge.classList.add("flash");
-    setTimeout(() => badge.classList.remove("flash"), 500);
-    monitorLog("info", "Phase changed: " + state.lastPhase + " -> " + phase);
+    $("our-count").textContent = ourMessageCount + " message" + (ourMessageCount !== 1 ? "s" : "");
+    $("opp-count").textContent = oppMessageCount + " message" + (oppMessageCount !== 1 ? "s" : "");
+    $("stat-total").textContent = ourMessageCount + oppMessageCount;
+    if (ourMessageCount > 0) {
+      $("stat-avg-chars").textContent = Math.round(totalChars / ourMessageCount);
+    }
+    addLog("Loaded " + conversations.length + " previous messages", "info");
   }
-  state.lastPhase = phase;
-  badge.textContent = label;
-}
 
-function updateStats() {
-  $("our-msg-count").textContent = state.messageCount;
-  $("opp-msg-count").textContent = state.oppMessageCount;
-}
+  // ── UI Updates ─────────────────────────────────────
+  function appendMessage(panelId, text, charCount, num, isOurs) {
+    const panel = $(panelId);
+    // Remove empty state
+    const empty = panel.querySelector(".empty-state");
+    if (empty) empty.remove();
 
-function updatePhaseTrack() {
-  const current = getPhase();
-  const idx = PHASES_ORDER.indexOf(current);
-  const segs = document.querySelectorAll(".phase-seg");
-  segs.forEach((seg, i) => {
-    seg.classList.remove("active", "done");
-    if (i < idx) seg.classList.add("done");
-    else if (i === idx) seg.classList.add("active");
-  });
-}
+    const card = document.createElement("div");
+    card.className = "message-card " + (isOurs ? "ours" : "theirs");
 
-function updateConnStatus(connected) {
-  const dot = $("conn-dot");
-  const text = $("conn-text");
-  dot.className = "conn-dot " + (connected ? "connected" : "disconnected");
-  text.textContent = connected ? "Connected" : "Disconnected";
-}
+    const body = document.createElement("div");
+    body.textContent = text;
 
-// ===== TIMER =====
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(updateTimer, 500);
-}
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+    meta.innerHTML = '<span>#' + num + '</span><span>' + charCount + ' chars</span><span>' + timeNow() + '</span>';
 
-function updateTimer() {
-  const el = $("timer");
-  if (!state.finishTime) { el.textContent = "--:--"; return; }
-  const remaining = Math.max(0, Math.floor((state.finishTime - Date.now()) / 1000));
-  const mins = Math.floor(remaining / 60);
-  const secs = remaining % 60;
-  el.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
-  el.className = "timer" + (remaining < 60 ? " warning" : "");
-  if (remaining <= 0 && timerInterval) clearInterval(timerInterval);
-
-  if (monitor.lastTurnStart > 0) {
-    const turnElapsed = ((Date.now() - monitor.lastTurnStart) / 1000).toFixed(1);
-    $("m-turn-time").textContent = turnElapsed + "s";
+    card.appendChild(body);
+    card.appendChild(meta);
+    panel.appendChild(card);
+    panel.scrollTop = panel.scrollHeight;
   }
-}
 
-// ===== FEED =====
-function addChatMsg(text, isOurs, team, injected) {
-  const feed = $("feed");
-  const div = document.createElement("div");
-  if (isOurs) div.className = "feed-msg ours";
-  else if (injected) div.className = "feed-msg injected";
-  else div.className = "feed-msg opponent";
+  function updateStatusBadge(status) {
+    const badge = $("badge-status");
+    badge.className = "badge badge-status " + status;
+    const labels = {
+      pending: "Pending", active: "Active", started: "Live", paused: "Paused",
+      finished: "Finished", disconnected: "Disconnected"
+    };
+    badge.textContent = labels[status] || status;
+  }
 
-  const senderDiv = document.createElement("div");
-  senderDiv.className = "sender";
-  senderDiv.textContent = isOurs ? (state.ourTeam || "US") : (team || "OPPONENT");
-  div.appendChild(senderDiv);
+  function updateTurnIndicator() {
+    const el = $("turn-indicator");
+    const text = $("turn-text");
+    if (isSameTeam(currentTurn, teamName)) {
+      el.className = "turn-indicator ours";
+      text.textContent = "Our Turn";
+    } else {
+      el.className = "turn-indicator theirs";
+      text.textContent = "Their Turn";
+    }
+  }
 
-  const preview = text.length > 300 ? text.substring(0, 300) + "..." : text;
-  div.appendChild(document.createTextNode(preview));
-  feed.appendChild(div);
-  feed.scrollTop = feed.scrollHeight;
-}
+  function updateStances() {
+    if (isSameTeam(teamName, pros)) {
+      $("our-stance").textContent = "PRO";
+      $("opp-stance").textContent = "CON";
+    } else if (isSameTeam(teamName, cons)) {
+      $("our-stance").textContent = "CON";
+      $("opp-stance").textContent = "PRO";
+    }
 
-function addSystemMsg(text) {
-  const feed = $("feed");
-  const div = document.createElement("div");
-  div.className = "feed-msg system";
-  div.textContent = text;
-  feed.appendChild(div);
-  feed.scrollTop = feed.scrollHeight;
-}
+    // Determine opponent name
+    const t1 = $("match-topic").dataset.team1 || "";
+    const t2 = $("match-topic").dataset.team2 || "";
+    if (!isSameTeam(t1, teamName) && t1) {
+      $("opp-team-label").textContent = t1;
+    } else if (!isSameTeam(t2, teamName) && t2) {
+      $("opp-team-label").textContent = t2;
+    }
+  }
 
-// ===== HELPERS =====
-function getOurStance() {
-  if (isSameTeam(state.ourTeam, state.pros)) return "PRO";
-  return "CON";
-}
+  function updatePhase() {
+    const remaining = finishTimeMs > 0 ? Math.max(0, (finishTimeMs - Date.now()) / 1000) : 999;
+    let phase = "Waiting";
+    if (matchStatus === "started" || matchStatus === "active") {
+      if (ourMessageCount === 0) phase = "Opening";
+      else if (remaining < 180 && ourMessageCount >= 6) phase = "Closing";
+      else if (ourMessageCount === 1) phase = "Rebuttal";
+      else if (ourMessageCount <= 3) phase = "Cross-Exam";
+      else phase = "Defense";
+    } else if (matchStatus === "finished") {
+      phase = "Finished";
+    }
+    $("badge-phase").textContent = phase;
+  }
 
-function getPhase() {
-  if (state.messageCount === 0) return "opening";
-  const remaining = state.finishTime ? Math.max(0, (state.finishTime - Date.now()) / 1000) : 999;
-  if (remaining < 180 && state.messageCount >= 4) return "closing";
-  if (state.messageCount === 1) return "rebuttal_first";
-  if (state.messageCount <= 3) return "cross_examination";
-  return "defense";
-}
+  // ── Timer ──────────────────────────────────────────
+  function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(function() {
+      if (finishTimeMs > 0) {
+        const remaining = Math.max(0, finishTimeMs - Date.now());
+        $("timer").textContent = formatTime(remaining);
+        if (remaining <= 60000) {
+          $("timer").style.color = "var(--red)";
+        } else if (remaining <= 180000) {
+          $("timer").style.color = "var(--amber)";
+        } else {
+          $("timer").style.color = "var(--text)";
+        }
+      }
+      updatePhase();
+    }, 1000);
+  }
 
-// ===== INIT =====
-initSetup();
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  // ── Init ───────────────────────────────────────────
+  loadConfig();
+})();
 </script>
 </body>
 </html>

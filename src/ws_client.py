@@ -29,6 +29,7 @@ class WSClient:
         self._turn_in_progress = False
         self._current_turn_id = ""
         self._last_sent_message = ""
+        self._last_turn_sent_time = 0.0
 
     async def connect(self) -> None:
         while self.running:
@@ -192,13 +193,25 @@ class WSClient:
         logger.info("Loaded %d previous messages", len(conversations))
 
     async def take_turn(self) -> None:
-        if not self.state.is_our_turn and not self.sandbox:
+        # Cooldown guard: ignore duplicate triggers within 15 seconds of sending
+        if time.time() - self._last_turn_sent_time < 15.0:
+            logger.debug("Cooldown active (%.1fs since last send), skipping",
+                         time.time() - self._last_turn_sent_time)
+            return
+
+        if not self.state.is_our_turn:
             logger.debug("take_turn called but not our turn, skipping")
             return
 
-        if self.state.status != "started" and not self.sandbox:
+        if self.state.status != "started":
             logger.debug("take_turn called but match status is %s, skipping", self.state.status)
             return
+
+        # Prevent sending twice without opponent responding (except opening)
+        if self.state.message_count > 0 and self.state.conversation:
+            if self.state.conversation[-1]["is_ours"]:
+                logger.debug("Last message is ours — waiting for opponent, skipping")
+                return
 
         turn_id = str(uuid.uuid4())[:8]
 
@@ -268,7 +281,7 @@ class WSClient:
                     self.engine.generate_caution_argument, self.state
                 )
 
-            if self.state.status != "started" and not self.sandbox:
+            if self.state.status != "started":
                 logger.warning("Match state changed during generation (now %s), aborting send", self.state.status)
                 return
 
@@ -279,6 +292,7 @@ class WSClient:
                 "data": {"message": argument},
             }
             await self.send_json(payload)
+            self._last_turn_sent_time = time.time()
 
             self._last_sent_message = argument
             self.state.record_our_message(argument)
