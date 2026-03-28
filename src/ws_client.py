@@ -129,6 +129,12 @@ class WSClient:
                 elif msg_type == "previous-message":
                     await self.handle_previous_messages(data)
 
+                elif msg_type == "user-joined":
+                    logger.info("User joined: %s", data.get("message"))
+
+                elif msg_type == "user-left":
+                    logger.info("User left: %s", data.get("message"))
+
                 elif msg_type == "error":
                     logger.warning("Server error: %s", data.get("message"))
 
