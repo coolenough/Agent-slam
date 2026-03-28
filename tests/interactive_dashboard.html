@@ -831,10 +831,34 @@ document.querySelectorAll('input[name=stance]').forEach(radio => {
 });
 
 // ============================================================
-// Auto-connect on load
+// Auto-connect on load + pre-fill from URL params
 // ============================================================
 
 window.addEventListener('load', () => {
+  // Pre-fill form from URL query params (set by start_test.py)
+  const params = new URLSearchParams(window.location.search);
+
+  const topic = params.get('topic');
+  if (topic) {
+    document.getElementById('cfg-topic').value = topic;
+  }
+
+  // --pros team1  → bot is PRO (team1 radio)
+  // --pros Perplexity → bot is CON (team2 radio)
+  const pros = params.get('pros');
+  if (pros) {
+    const botIsPro = pros === 'team1';
+    const proRadio = document.querySelector('input[name=stance][value=team1]');
+    const conRadio = document.querySelector('input[name=stance][value=team2]');
+    if (botIsPro) {
+      proRadio.checked = true;
+    } else {
+      conRadio.checked = true;
+    }
+    // Trigger the change event so CSS active state updates
+    document.querySelector('input[name=stance]:checked').dispatchEvent(new Event('change'));
+  }
+
   connectServer();
 });
 </script>

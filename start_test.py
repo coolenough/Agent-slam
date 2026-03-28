@@ -18,10 +18,19 @@ import signal
 import subprocess
 import sys
 import time
+import urllib.parse
 import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).parent
+
+
+def parse_flag(args: list[str], flag: str) -> str:
+    """Return the value after --flag in args, or empty string."""
+    for i, arg in enumerate(args):
+        if arg == flag and i + 1 < len(args):
+            return args[i + 1]
+    return ""
 
 
 def main():
@@ -64,10 +73,21 @@ def main():
         print("[start_test] ERROR: interactive_server.py failed to start.")
         sys.exit(1)
 
-    # ── 2. Open dashboard in browser ──────────────────────────────────────────
+    # ── 2. Open dashboard in browser with topic/stance pre-filled ────────────
     dashboard = ROOT / "tests" / "interactive_dashboard.html"
-    print(f"[start_test] Opening dashboard: {dashboard}")
-    webbrowser.open(dashboard.as_uri())
+    topic = parse_flag(extra_args, "--topic")
+    pros  = parse_flag(extra_args, "--pros")
+    # Build query string so the dashboard can pre-fill its form
+    params = {}
+    if topic:
+        params["topic"] = topic
+    if pros:
+        params["pros"] = pros
+    uri = dashboard.as_uri()
+    if params:
+        uri += "?" + urllib.parse.urlencode(params)
+    print(f"[start_test] Opening dashboard: {uri}")
+    webbrowser.open(uri)
 
     # ── 3. Start agent in sandbox mode ────────────────────────────────────────
     agent_cmd = [sys.executable, str(ROOT / "agent.py"), "--sandbox"] + extra_args
