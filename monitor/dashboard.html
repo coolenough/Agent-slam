@@ -102,13 +102,14 @@
 
   /* ── Dashboard Layout ──────────────────── */
   #app {
-    display: none;
+    display: grid;
     height: 100vh;
     grid-template-rows: auto auto 1fr auto;
     grid-template-columns: 1fr 380px;
     background: radial-gradient(ellipse at 30% 0%, rgba(50,215,255,0.02) 0%, transparent 50%),
                 radial-gradient(ellipse at 70% 0%, rgba(255,107,138,0.02) 0%, transparent 50%);
   }
+  #app.hidden { display: none; }
 
   /* ── Top Bar ───────────────────────────── */
   .top {
@@ -348,7 +349,7 @@
 </div>
 
 <!-- ── Main Dashboard ────────────────────── -->
-<div id="app">
+<div id="app" class="hidden">
   <!-- Top Bar -->
   <div class="top">
     <div class="top-left">
@@ -505,7 +506,7 @@
 
       // Show dashboard view
       $("setup").style.display = "none";
-      $("app").style.display = "grid";
+      $("app").classList.remove("hidden");
       $("d-us").textContent = team;
       $("d-topic").textContent = topic || "Waiting for match...";
       startTick();
@@ -555,7 +556,7 @@
     connected = false;
     if (ws) { ws.close(); ws = null; }
     stopTick();
-    $("app").style.display = "none";
+    $("app").classList.add("hidden");
     $("setup").style.display = "flex";
     resetBtn();
     resetState();

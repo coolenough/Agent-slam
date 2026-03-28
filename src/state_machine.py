@@ -68,6 +68,10 @@ class MatchState:
         remaining = self.seconds_remaining_in_match
         avg = self.avg_response_time
 
+        # Never use degraded modes for the opening argument
+        if self.message_count == 0:
+            return "fast"
+
         if remaining < 60:
             return "critical"
         if remaining < 120 or avg > 60:
