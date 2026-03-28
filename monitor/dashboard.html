@@ -3,1056 +3,789 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent SLAM 2026 — Live Match</title>
+<title>Agent SLAM 2026 — Test Dashboard</title>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
     --bg: #0a0a0c;
-    --surface: rgba(255, 255, 255, 0.04);
-    --surface-hover: rgba(255, 255, 255, 0.07);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-light: rgba(255, 255, 255, 0.12);
+    --surface: rgba(255,255,255,0.04);
+    --surface-2: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.08);
+    --border-light: rgba(255,255,255,0.14);
     --text: #f5f5f7;
-    --text-secondary: rgba(245, 245, 247, 0.6);
-    --text-tertiary: rgba(245, 245, 247, 0.35);
+    --text-2: rgba(245,245,247,0.6);
+    --text-3: rgba(245,245,247,0.35);
     --cyan: #32d7ff;
-    --cyan-dim: rgba(50, 215, 255, 0.15);
+    --cyan-bg: rgba(50,215,255,0.1);
     --rose: #ff6b8a;
-    --rose-dim: rgba(255, 107, 138, 0.15);
+    --rose-bg: rgba(255,107,138,0.1);
     --green: #30d158;
     --amber: #ffd60a;
     --red: #ff453a;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --r: 14px;
+    --r-sm: 10px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
   }
 
   body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
+    height: 100vh;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* ── Setup Screen ─────────────────────────────────── */
-
+  /* ── Setup ─────────────────────────────── */
   #setup {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     padding: 24px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(50, 215, 255, 0.06) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 50% 0%, rgba(50,215,255,0.05) 0%, transparent 60%);
   }
 
   .setup-card {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 40px 32px;
-    backdrop-filter: blur(40px) saturate(1.4);
-    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-radius: var(--r);
+    padding: 36px 28px;
+    backdrop-filter: blur(40px);
   }
 
-  .setup-card h1 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    margin-bottom: 4px;
-  }
+  .setup-card h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .setup-card .sub { font-size: 13px; color: var(--text-2); margin: 4px 0 28px; }
 
-  .setup-card .subtitle {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 32px;
-  }
-
-  .field { margin-bottom: 20px; }
-
+  .field { margin-bottom: 16px; }
   .field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    display: block; font-size: 11px; font-weight: 500;
+    color: var(--text-3); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px;
   }
-
-  .field input, .field select {
-    width: 100%;
-    padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-size: 14px;
-    font-family: var(--mono);
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); color: var(--text);
+    font-size: 13px; font-family: var(--mono); outline: none;
+    transition: border-color 0.2s;
   }
-
-  .field input:focus, .field select:focus {
+  .field input:focus, .field select:focus, .field textarea:focus {
     border-color: var(--cyan);
-    background: rgba(50, 215, 255, 0.04);
   }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-3); }
 
-  .field input::placeholder { color: var(--text-tertiary); }
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
 
-  .field select {
-    -webkit-appearance: none;
-    appearance: none;
-    cursor: pointer;
+  .btn {
+    padding: 12px 20px; border: none; border-radius: var(--r-sm);
+    font-size: 14px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
   }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .btn-connect {
-    width: 100%;
-    padding: 14px;
-    background: var(--cyan);
-    color: #000;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-weight: 600;
-    font-family: var(--font);
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-    margin-top: 8px;
-  }
-
-  .btn-connect:hover { opacity: 0.9; }
-  .btn-connect:active { transform: scale(0.98); }
-  .btn-connect:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--cyan); color: #000; width: 100%; margin-top: 8px; }
+  .btn-primary:hover { opacity: 0.9; }
 
   .setup-error {
-    margin-top: 16px;
-    padding: 10px 14px;
-    background: rgba(255, 69, 58, 0.1);
-    border: 1px solid rgba(255, 69, 58, 0.2);
-    border-radius: var(--radius-sm);
-    color: var(--red);
-    font-size: 13px;
+    margin-top: 14px; padding: 8px 12px;
+    background: rgba(255,69,58,0.08); border: 1px solid rgba(255,69,58,0.15);
+    border-radius: var(--r-sm); color: var(--red); font-size: 12px;
     display: none;
   }
 
-  /* ── Main Dashboard ───────────────────────────────── */
-
-  #dashboard {
+  /* ── Dashboard Layout ──────────────────── */
+  #app {
     display: none;
-    flex-direction: column;
     height: 100vh;
-    background: radial-gradient(ellipse at 30% 0%, rgba(50, 215, 255, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 0%, rgba(255, 107, 138, 0.03) 0%, transparent 50%);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr 380px;
+    background: radial-gradient(ellipse at 30% 0%, rgba(50,215,255,0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 0%, rgba(255,107,138,0.02) 0%, transparent 50%);
   }
 
-  /* ── Top Bar ──────────────────────────────────────── */
-
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
+  /* ── Top Bar ───────────────────────────── */
+  .top {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    flex-shrink: 0;
   }
 
-  .top-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  .top-left { display: flex; align-items: center; gap: 12px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.off { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .topic-text { font-size: 13px; font-weight: 500; max-width: 450px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .top-right { display: flex; align-items: center; gap: 14px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.3px;
   }
+  .pill-phase { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); text-transform: uppercase; }
+  .pill-live { background: rgba(48,209,88,0.1); border: 1px solid rgba(48,209,88,0.2); color: var(--green); }
+  .pill-off  { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); }
 
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    flex-shrink: 0;
-  }
-
-  .status-dot.disconnected {
-    background: var(--red);
-    box-shadow: 0 0 8px var(--red);
-  }
-
-  .match-topic {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    max-width: 500px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .top-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-  }
-
-  .badge-phase {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .badge-round {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-  }
-
-  .badge-status {
-    border: 1px solid;
-  }
-
-  .badge-status.started {
-    background: rgba(48, 209, 88, 0.1);
-    border-color: rgba(48, 209, 88, 0.2);
-    color: var(--green);
-  }
-
-  .badge-status.pending {
-    background: rgba(255, 214, 10, 0.1);
-    border-color: rgba(255, 214, 10, 0.2);
-    color: var(--amber);
-  }
-
-  .badge-status.finished {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--border);
-    color: var(--text-secondary);
-  }
-
-  /* ── Info Strip ───────────────────────────────────── */
-
-  .info-strip {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
-    padding: 12px 24px;
+  /* ── Info Strip ────────────────────────── */
+  .strip {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: center; gap: 32px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
-    flex-shrink: 0;
   }
 
-  .info-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
+  .strip-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .strip-label { color: var(--text-3); }
+  .strip-val { font-family: var(--mono); font-weight: 500; font-size: 12px; }
+  .strip-val.cyan { color: var(--cyan); }
+  .strip-val.rose { color: var(--rose); }
+
+  .timer { font-size: 20px; font-weight: 600; font-family: var(--mono); letter-spacing: 1px; }
+
+  .turn-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .turn-pill.ours  { background: var(--cyan-bg); color: var(--cyan); }
+  .turn-pill.theirs { background: var(--rose-bg); color: var(--rose); }
+  .turn-pill .blink {
+    width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
   }
 
-  .info-label {
-    color: var(--text-tertiary);
-    font-weight: 400;
-  }
-
-  .info-value {
-    color: var(--text);
-    font-weight: 500;
-    font-family: var(--mono);
-    font-size: 13px;
-  }
-
-  .info-value.cyan { color: var(--cyan); }
-  .info-value.rose { color: var(--rose); }
-  .info-value.timer { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
-
-  .turn-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .turn-indicator.ours {
-    background: var(--cyan-dim);
-    color: var(--cyan);
-  }
-
-  .turn-indicator.theirs {
-    background: var(--rose-dim);
-    color: var(--rose);
-  }
-
-  .turn-indicator .pulse {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
-
-  /* ── Message Area ─────────────────────────────────── */
-
-  .message-area {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    overflow: hidden;
-  }
-
-  .message-panel {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    overflow: hidden;
-  }
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .panel-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .panel-title .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .panel-title.ours .dot { background: var(--cyan); }
-  .panel-title.theirs .dot { background: var(--rose); }
-  .panel-title.ours { color: var(--cyan); }
-  .panel-title.theirs { color: var(--rose); }
-
-  .panel-count {
-    font-size: 12px;
-    color: var(--text-tertiary);
-    font-family: var(--mono);
-  }
-
-  .panel-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
+  /* ── Message Feed (left) ───────────────── */
+  .feed {
+    overflow-y: auto; padding: 16px 20px;
+    border-right: 1px solid var(--border);
     scroll-behavior: smooth;
   }
+  .feed::-webkit-scrollbar { width: 4px; }
+  .feed::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
 
-  .panel-messages::-webkit-scrollbar { width: 4px; }
-  .panel-messages::-webkit-scrollbar-track { background: transparent; }
-  .panel-messages::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+  .msg {
+    padding: 14px 16px; border-radius: var(--r-sm); margin-bottom: 10px;
+    font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;
+    animation: fadeUp 0.25s ease;
+  }
+  .msg.ours   { background: var(--cyan-bg); border: 1px solid rgba(50,215,255,0.08); }
+  .msg.theirs { background: var(--rose-bg); border: 1px solid rgba(255,107,138,0.08); }
 
-  .message-card {
-    padding: 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease;
+  .msg-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .msg-head.ours  { color: var(--cyan); }
+  .msg-head.theirs { color: var(--rose); }
+  .msg-head span:last-child { font-weight: 400; color: var(--text-3); font-family: var(--mono); text-transform: none; letter-spacing: 0; }
+
+  .msg-foot {
+    display: flex; gap: 16px; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 10px; color: var(--text-3); font-family: var(--mono);
   }
 
-  .message-card.ours {
-    background: var(--cyan-dim);
-    border: 1px solid rgba(50, 215, 255, 0.1);
+  .empty-feed {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-3); font-size: 13px; font-style: italic;
   }
 
-  .message-card.theirs {
-    background: var(--rose-dim);
-    border: 1px solid rgba(255, 107, 138, 0.1);
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  .message-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-family: var(--mono);
+  /* ── Right Panel (controls) ────────────── */
+  .controls {
+    display: flex; flex-direction: column;
+    overflow-y: auto;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+  .ctrl-section {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
   }
 
-  .empty-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--text-tertiary);
-    font-size: 13px;
-    font-style: italic;
+  .ctrl-title {
+    font-size: 11px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
   }
 
-  /* ── Bottom Bar ───────────────────────────────────── */
+  .ctrl-section textarea {
+    width: 100%; height: 160px; padding: 10px 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); color: var(--text);
+    font-size: 13px; font-family: var(--font); line-height: 1.5;
+    outline: none; resize: vertical; transition: border-color 0.2s;
+  }
+  .ctrl-section textarea:focus { border-color: var(--cyan); }
+  .ctrl-section textarea::placeholder { color: var(--text-3); }
 
-  .bottom-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
+  .btn-send {
+    width: 100%; margin-top: 10px; padding: 10px;
+    background: var(--rose); color: #fff; border: none;
+    border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+    font-family: var(--font); cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-send:hover { opacity: 0.9; }
+  .btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .char-hint {
+    margin-top: 6px; font-size: 11px; color: var(--text-3); font-family: var(--mono); text-align: right;
+  }
+
+  .ctrl-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .ctrl-row .field { flex: 1; margin-bottom: 0; }
+
+  .btn-sm {
+    padding: 8px 14px; border-radius: var(--r-sm);
+    font-size: 12px; font-weight: 500; font-family: var(--font);
+    cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-2);
+  }
+  .btn-sm:hover { border-color: var(--border-light); color: var(--text); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn-sm.green { border-color: rgba(48,209,88,0.3); color: var(--green); }
+  .btn-sm.green:hover { background: rgba(48,209,88,0.08); }
+
+  .timer-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .timer-row input {
+    width: 80px; padding: 8px 10px; text-align: center;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--r-sm); color: var(--text);
+    font-size: 13px; font-family: var(--mono); outline: none;
+  }
+  .timer-row input:focus { border-color: var(--cyan); }
+  .timer-row span { font-size: 12px; color: var(--text-3); }
+
+  /* ── Event Log ─────────────────────────── */
+  .log-section {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+    padding: 0;
+  }
+  .log-section .ctrl-title { padding: 12px 18px 0; }
+  .log-body {
+    flex: 1; overflow-y: auto; padding: 8px 18px 12px;
+  }
+  .log-body::-webkit-scrollbar { width: 3px; }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .log-line {
+    font-family: var(--mono); font-size: 10.5px; line-height: 1.5;
+    color: var(--text-3); white-space: pre-wrap;
+  }
+  .log-line.err { color: var(--red); }
+  .log-line.wrn { color: var(--amber); }
+
+  /* ── Bottom Bar ────────────────────────── */
+  .bottom {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px;
     border-top: 1px solid var(--border);
     background: var(--surface);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    flex-shrink: 0;
   }
-
-  .bottom-left, .bottom-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .stat {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-tertiary);
-  }
-
-  .stat-value {
-    color: var(--text-secondary);
-    font-family: var(--mono);
-    font-weight: 500;
-  }
+  .stats { display: flex; gap: 20px; }
+  .stat { font-size: 11px; color: var(--text-3); }
+  .stat b { color: var(--text-2); font-family: var(--mono); font-weight: 500; }
 
   .btn-disconnect {
-    padding: 6px 16px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-family: var(--font);
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 5px 14px; background: transparent;
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    color: var(--text-3); font-size: 11px; font-family: var(--font);
+    cursor: pointer; transition: all 0.15s;
   }
-
-  .btn-disconnect:hover {
-    border-color: var(--red);
-    color: var(--red);
-  }
-
-  /* ── Log Overlay ──────────────────────────────────── */
-
-  .log-toggle {
-    padding: 6px 16px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-family: var(--font);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .log-toggle:hover { border-color: var(--border-light); color: var(--text); }
-
-  .log-panel {
-    display: none;
-    position: fixed;
-    bottom: 52px;
-    left: 0;
-    right: 0;
-    height: 200px;
-    background: rgba(10, 10, 12, 0.95);
-    border-top: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    overflow-y: auto;
-    padding: 12px 24px;
-    z-index: 10;
-  }
-
-  .log-panel.visible { display: block; }
-
-  .log-entry {
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.6;
-    color: var(--text-tertiary);
-    white-space: pre-wrap;
-  }
-
-  .log-entry.error { color: var(--red); }
-  .log-entry.warn { color: var(--amber); }
-  .log-entry.info { color: var(--text-secondary); }
+  .btn-disconnect:hover { border-color: var(--red); color: var(--red); }
 </style>
 </head>
 <body>
 
-<!-- ── Setup Screen ──────────────────────────────────── -->
+<!-- ── Setup Screen ──────────────────────── -->
 <div id="setup">
   <div class="setup-card">
-    <h1>Agent SLAM 2026</h1>
-    <p class="subtitle">Live match spectator dashboard</p>
+    <h1>Agent SLAM — Test Dashboard</h1>
+    <p class="sub">Connect to local test server, paste Perplexity responses as opponent</p>
 
     <div class="field">
-      <label>WebSocket URL</label>
-      <input type="text" id="ws-url" placeholder="wss://agent-slam-server.fly.dev/ws?payload=...">
+      <label>Server URL</label>
+      <input type="text" id="s-url" value="ws://localhost:8766" placeholder="ws://localhost:8766">
     </div>
-
     <div class="field">
-      <label>Your Team</label>
-      <input type="text" id="team-name" placeholder="team1">
+      <label>Your Team Name</label>
+      <input type="text" id="s-team" placeholder="team1">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Topic</label>
+        <input type="text" id="s-topic" placeholder="AI will do more harm than good">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Bot Stance</label>
+        <select id="s-stance">
+          <option value="team1">PRO (team1)</option>
+          <option value="team2">CON (team2)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Duration (sec)</label>
+        <input type="number" id="s-duration" value="900" min="60" max="3600">
+      </div>
     </div>
 
-    <button class="btn-connect" id="btn-connect" onclick="doConnect()">Connect</button>
-
-    <div class="setup-error" id="setup-error"></div>
+    <button class="btn btn-primary" id="btn-go" onclick="doConnect()">Connect &amp; Start Match</button>
+    <div class="setup-error" id="s-err"></div>
   </div>
 </div>
 
-<!-- ── Main Dashboard ────────────────────────────────── -->
-<div id="dashboard">
-
+<!-- ── Main Dashboard ────────────────────── -->
+<div id="app">
   <!-- Top Bar -->
-  <div class="top-bar">
+  <div class="top">
     <div class="top-left">
-      <div class="status-dot" id="status-dot"></div>
-      <span class="match-topic" id="match-topic">Waiting for match data...</span>
+      <div class="dot on" id="dot"></div>
+      <span class="topic-text" id="d-topic">Waiting...</span>
     </div>
     <div class="top-right">
-      <span class="badge badge-round" id="badge-round">--</span>
-      <span class="badge badge-phase" id="badge-phase">--</span>
-      <span class="badge badge-status pending" id="badge-status">Connecting</span>
+      <span class="pill pill-phase" id="d-phase">--</span>
+      <span class="pill pill-off" id="d-status">Connecting</span>
     </div>
   </div>
 
   <!-- Info Strip -->
-  <div class="info-strip">
-    <div class="info-item">
-      <span class="info-label">Us</span>
-      <span class="info-value cyan" id="our-team-label">--</span>
+  <div class="strip">
+    <div class="strip-item"><span class="strip-label">Us</span><span class="strip-val cyan" id="d-us">--</span></div>
+    <div class="strip-item"><span class="strip-label">Stance</span><span class="strip-val cyan" id="d-us-stance">--</span></div>
+    <div class="strip-item"><span class="timer" id="d-timer">--:--</span></div>
+    <div class="strip-item">
+      <span class="turn-pill" id="d-turn"><span class="blink"></span><span id="d-turn-text">Waiting</span></span>
     </div>
-    <div class="info-item">
-      <span class="info-label">Stance</span>
-      <span class="info-value cyan" id="our-stance">--</span>
-    </div>
-    <div class="info-item">
-      <span class="info-value timer" id="timer">--:--</span>
-    </div>
-    <div class="info-item">
-      <span class="turn-indicator" id="turn-indicator">
-        <span class="pulse"></span>
-        <span id="turn-text">Waiting</span>
-      </span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Opponent</span>
-      <span class="info-value rose" id="opp-team-label">--</span>
-    </div>
-    <div class="info-item">
-      <span class="info-label">Stance</span>
-      <span class="info-value rose" id="opp-stance">--</span>
-    </div>
+    <div class="strip-item"><span class="strip-label">Opp</span><span class="strip-val rose" id="d-opp">--</span></div>
+    <div class="strip-item"><span class="strip-label">Stance</span><span class="strip-val rose" id="d-opp-stance">--</span></div>
   </div>
 
-  <!-- Message Panels -->
-  <div class="message-area">
-    <div class="message-panel">
-      <div class="panel-header">
-        <span class="panel-title ours"><span class="dot"></span> Our Arguments</span>
-        <span class="panel-count" id="our-count">0 messages</span>
+  <!-- Message Feed -->
+  <div class="feed" id="feed">
+    <div class="empty-feed">Waiting for match to start...</div>
+  </div>
+
+  <!-- Right Panel: Controls -->
+  <div class="controls">
+    <!-- Opponent Input -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">Inject Opponent Response</div>
+      <textarea id="opp-input" placeholder="Paste Perplexity response here..."></textarea>
+      <div class="char-hint"><span id="char-count">0</span> chars</div>
+      <button class="btn-send" id="btn-send" onclick="sendOpponent()">Send as Opponent</button>
+    </div>
+
+    <!-- Match Controls -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">Match Controls</div>
+      <div class="timer-row" style="margin-bottom: 10px;">
+        <input type="number" id="time-input" value="120" min="10" max="3600">
+        <span>seconds</span>
+        <button class="btn-sm" onclick="setTime()">Set Timer</button>
       </div>
-      <div class="panel-messages" id="our-messages">
-        <div class="empty-state">Waiting for match to start...</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-sm danger" onclick="endMatch()">End Match</button>
+        <button class="btn-sm" onclick="doDisconnect()">Disconnect</button>
       </div>
     </div>
-    <div class="message-panel">
-      <div class="panel-header">
-        <span class="panel-title theirs"><span class="dot"></span> Opponent Arguments</span>
-        <span class="panel-count" id="opp-count">0 messages</span>
-      </div>
-      <div class="panel-messages" id="opp-messages">
-        <div class="empty-state">Waiting for match to start...</div>
-      </div>
+
+    <!-- Event Log -->
+    <div class="log-section">
+      <div class="ctrl-title">Event Log</div>
+      <div class="log-body" id="log"></div>
     </div>
   </div>
 
   <!-- Bottom Bar -->
-  <div class="bottom-bar">
-    <div class="bottom-left">
-      <div class="stat">Messages <span class="stat-value" id="stat-total">0</span></div>
-      <div class="stat">Avg chars <span class="stat-value" id="stat-avg-chars">--</span></div>
-      <div class="stat">Est. cost <span class="stat-value" id="stat-cost">$0.00</span></div>
+  <div class="bottom">
+    <div class="stats">
+      <span class="stat">Bot msgs: <b id="st-bot">0</b></span>
+      <span class="stat">Opp msgs: <b id="st-opp">0</b></span>
+      <span class="stat">Avg chars: <b id="st-avg">--</b></span>
+      <span class="stat">Est. cost: <b id="st-cost">$0.00</b></span>
     </div>
-    <div class="bottom-right">
-      <button class="log-toggle" onclick="toggleLog()">Event Log</button>
-      <button class="btn-disconnect" onclick="doDisconnect()">Disconnect</button>
-    </div>
+    <button class="btn-disconnect" onclick="doDisconnect()">Disconnect</button>
   </div>
-
-  <!-- Log Panel -->
-  <div class="log-panel" id="log-panel"></div>
 </div>
 
 <script>
-(function() {
+(function(){
   "use strict";
 
-  // ── State ──────────────────────────────────────────
   let ws = null;
-  let teamName = "";
-  let finishTimeMs = 0;
-  let timerInterval = null;
-  let ourMessageCount = 0;
-  let oppMessageCount = 0;
-  let totalChars = 0;
-  let matchStatus = "pending";
-  let currentTurn = "";
-  let pros = "";
-  let cons = "";
+  let team = "";
+  let botTeam = "";
+  let finishMs = 0;
+  let tick = null;
+  let botMsgs = 0, oppMsgs = 0, totalBotChars = 0;
+  let status = "pending";
+  let turn = "";
+  let pros = "", cons = "";
 
-  // ── Helpers ────────────────────────────────────────
-  function $(id) { return document.getElementById(id); }
+  const $ = id => document.getElementById(id);
 
-  function isSameTeam(a, b) {
-    return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
-  }
-
-  function formatTime(ms) {
+  function same(a, b) { return (a||"").trim().toLowerCase() === (b||"").trim().toLowerCase(); }
+  function now() { return new Date().toLocaleTimeString("en-GB",{hour12:false}); }
+  function fmtTime(ms) {
     if (ms <= 0) return "00:00";
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+    const s = Math.floor(ms/1000), m = Math.floor(s/60);
+    return String(m).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
   }
 
-  function timeNow() {
-    return new Date().toLocaleTimeString("en-GB", { hour12: false });
-  }
-
-  function escapeHtml(text) {
-    const d = document.createElement("div");
-    d.textContent = text;
-    return d.innerHTML;
-  }
-
-  // ── Persistence ────────────────────────────────────
-  function saveConfig() {
+  // persistence
+  function save() {
     try {
-      localStorage.setItem("slam_ws_url", $("ws-url").value);
-      localStorage.setItem("slam_team", $("team-name").value);
-    } catch(e) {}
+      localStorage.setItem("t_url", $("s-url").value);
+      localStorage.setItem("t_team", $("s-team").value);
+      localStorage.setItem("t_topic", $("s-topic").value);
+      localStorage.setItem("t_stance", $("s-stance").value);
+      localStorage.setItem("t_dur", $("s-duration").value);
+    } catch(e){}
   }
-
-  function loadConfig() {
+  function load() {
     try {
-      const url = localStorage.getItem("slam_ws_url");
-      const team = localStorage.getItem("slam_team");
-      if (url) $("ws-url").value = url;
-      if (team) $("team-name").value = team;
-    } catch(e) {}
+      const v = k => localStorage.getItem(k);
+      if (v("t_url"))    $("s-url").value = v("t_url");
+      if (v("t_team"))   $("s-team").value = v("t_team");
+      if (v("t_topic"))  $("s-topic").value = v("t_topic");
+      if (v("t_stance")) $("s-stance").value = v("t_stance");
+      if (v("t_dur"))    $("s-duration").value = v("t_dur");
+    } catch(e){}
   }
 
-  // ── Logging ────────────────────────────────────────
-  function addLog(msg, level) {
-    const panel = $("log-panel");
-    const entry = document.createElement("div");
-    entry.className = "log-entry " + (level || "info");
-    entry.textContent = timeNow() + "  " + msg;
-    panel.appendChild(entry);
-    panel.scrollTop = panel.scrollHeight;
+  // char counter
+  $("opp-input").addEventListener("input", () => {
+    $("char-count").textContent = $("opp-input").value.length;
+  });
+
+  // logging
+  function addLog(msg, cls) {
+    const el = document.createElement("div");
+    el.className = "log-line " + (cls||"");
+    el.textContent = now() + "  " + msg;
+    $("log").appendChild(el);
+    $("log").scrollTop = $("log").scrollHeight;
   }
 
-  window.toggleLog = function() {
-    $("log-panel").classList.toggle("visible");
-  };
-
-  // ── Connection ─────────────────────────────────────
+  // ── Connect ─────────────────────────────
   window.doConnect = function() {
-    const url = $("ws-url").value.trim();
-    teamName = $("team-name").value.trim();
+    const url = $("s-url").value.trim();
+    team = $("s-team").value.trim();
+    botTeam = $("s-stance").value;
+    const topic = $("s-topic").value.trim();
+    const dur = parseInt($("s-duration").value) || 900;
 
-    if (!url) { showSetupError("Enter a WebSocket URL"); return; }
-    if (!teamName) { showSetupError("Enter your team name"); return; }
+    if (!url) { showErr("Enter server URL"); return; }
+    if (!team) { showErr("Enter team name"); return; }
 
-    $("btn-connect").disabled = true;
-    $("btn-connect").textContent = "Connecting...";
-    hideSetupError();
-    saveConfig();
+    $("btn-go").disabled = true;
+    $("btn-go").textContent = "Connecting...";
+    hideErr();
+    save();
 
-    try {
-      ws = new WebSocket(url);
-    } catch(e) {
-      showSetupError("Invalid URL: " + e.message);
-      $("btn-connect").disabled = false;
-      $("btn-connect").textContent = "Connect";
-      return;
-    }
+    try { ws = new WebSocket(url); }
+    catch(e) { showErr("Bad URL: " + e.message); resetBtn(); return; }
 
     ws.onopen = function() {
-      addLog("WebSocket connected", "info");
+      // Identify as dashboard
+      ws.send(JSON.stringify({type: "dashboard-hello"}));
+
+      addLog("Connected to server", "");
+
+      // Show dashboard
       $("setup").style.display = "none";
-      $("dashboard").style.display = "flex";
-      $("status-dot").className = "status-dot";
-      updateStatusBadge("pending");
-      $("our-team-label").textContent = teamName;
-      startTimer();
+      $("app").style.display = "grid";
+      $("d-us").textContent = team;
+      $("d-topic").textContent = topic || "Waiting for match...";
+      startTick();
+
+      // Auto-start match
+      ws.send(JSON.stringify({
+        type: "start-match",
+        data: {
+          topic: topic,
+          description: "",
+          round: "Round 1",
+          botTeam: botTeam,
+          durationSeconds: dur,
+        }
+      }));
+      addLog("Start-match sent (bot=" + botTeam + ", " + dur + "s)", "");
     };
 
-    ws.onmessage = function(event) {
-      try {
-        const msg = JSON.parse(event.data);
-        handleMessage(msg);
-      } catch(e) {
-        addLog("Parse error: " + e.message, "error");
-      }
+    ws.onmessage = function(ev) {
+      try { route(JSON.parse(ev.data)); }
+      catch(e) { addLog("Parse error: " + e.message, "err"); }
     };
 
     ws.onerror = function() {
-      addLog("WebSocket error", "error");
-      showSetupError("Connection failed. Check URL and try again.");
-      $("btn-connect").disabled = false;
-      $("btn-connect").textContent = "Connect";
+      showErr("Connection failed. Is test_server.py running?");
+      resetBtn();
     };
 
-    ws.onclose = function(event) {
-      addLog("Disconnected (code " + event.code + ")", "warn");
-      $("status-dot").className = "status-dot disconnected";
-      updateStatusBadge("disconnected");
+    ws.onclose = function(ev) {
+      addLog("Disconnected (code " + ev.code + ")", "wrn");
+      $("dot").className = "dot off";
+      setStatus("disconnected");
     };
   };
 
   window.doDisconnect = function() {
     if (ws) { ws.close(); ws = null; }
-    stopTimer();
-    $("dashboard").style.display = "none";
+    stopTick();
+    $("app").style.display = "none";
     $("setup").style.display = "flex";
-    $("btn-connect").disabled = false;
-    $("btn-connect").textContent = "Connect";
+    resetBtn();
     resetState();
   };
 
+  function resetBtn() {
+    $("btn-go").disabled = false;
+    $("btn-go").textContent = "Connect & Start Match";
+  }
+
   function resetState() {
-    ourMessageCount = 0;
-    oppMessageCount = 0;
-    totalChars = 0;
-    matchStatus = "pending";
-    currentTurn = "";
-    finishTimeMs = 0;
-    $("our-messages").innerHTML = '<div class="empty-state">Waiting for match to start...</div>';
-    $("opp-messages").innerHTML = '<div class="empty-state">Waiting for match to start...</div>';
-    $("our-count").textContent = "0 messages";
-    $("opp-count").textContent = "0 messages";
-    $("stat-total").textContent = "0";
-    $("stat-avg-chars").textContent = "--";
-    $("stat-cost").textContent = "$0.00";
-    $("log-panel").innerHTML = "";
+    botMsgs = 0; oppMsgs = 0; totalBotChars = 0;
+    status = "pending"; turn = ""; finishMs = 0;
+    $("feed").innerHTML = '<div class="empty-feed">Waiting for match to start...</div>';
+    $("log").innerHTML = "";
+    $("st-bot").textContent = "0";
+    $("st-opp").textContent = "0";
+    $("st-avg").textContent = "--";
+    $("st-cost").textContent = "$0.00";
   }
 
-  function showSetupError(msg) {
-    const el = $("setup-error");
-    el.textContent = msg;
-    el.style.display = "block";
-  }
+  function showErr(m) { $("s-err").textContent = m; $("s-err").style.display = "block"; }
+  function hideErr() { $("s-err").style.display = "none"; }
 
-  function hideSetupError() {
-    $("setup-error").style.display = "none";
-  }
+  // ── Actions ─────────────────────────────
+  window.sendOpponent = function() {
+    const text = $("opp-input").value.trim();
+    if (!text) return;
+    if (!ws || ws.readyState !== 1) { addLog("Not connected!", "err"); return; }
 
-  // ── Message Router ─────────────────────────────────
-  function handleMessage(msg) {
-    const type = msg.type || "";
-    const data = msg.data || {};
+    ws.send(JSON.stringify({ type: "inject-opponent", data: { message: text } }));
+    $("opp-input").value = "";
+    $("char-count").textContent = "0";
+    addLog("Opponent message injected (" + text.length + " chars)", "");
+  };
+
+  window.setTime = function() {
+    const s = parseInt($("time-input").value) || 120;
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ type: "set-time", data: { seconds: s } }));
+    addLog("Timer set to " + s + "s", "");
+  };
+
+  window.endMatch = function() {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ type: "end-match" }));
+    addLog("End match requested", "wrn");
+  };
+
+  // ── Message Router ──────────────────────
+  function route(msg) {
+    const t = msg.type || "";
+    const d = msg.data || {};
     const from = msg.from || "";
 
-    switch(type) {
+    switch(t) {
       case "welcome":
-        addLog("Server: " + (data.message || "Welcome"), "info");
-        break;
+        addLog("Server: " + (d.message || "Welcome"), ""); break;
 
       case "match-state":
-        handleMatchState(data);
-        break;
+        onMatchState(d); break;
 
       case "match-update":
-        handleMatchUpdate(data);
-        break;
+        if (d.finishTime) finishMs = d.finishTime;
+        status = "started"; setStatus("started");
+        addLog("Match update — timer running", ""); break;
 
       case "debate-message":
-        handleDebateMessage(from, data, msg.timestamp);
-        break;
-
       case "sandbox-message":
-        handleDebateMessage(from, data, msg.timestamp);
-        break;
-
-      case "previous-message":
-        handlePreviousMessages(data);
-        break;
+        onDebateMsg(from, d); break;
 
       case "match-paused":
-        matchStatus = "paused";
-        updateStatusBadge("paused");
-        addLog("Match paused", "warn");
-        break;
+        status = "paused"; setStatus("paused");
+        addLog("Match paused", "wrn"); break;
 
       case "match-resumed":
-        matchStatus = "started";
-        if (data.finishTime) finishTimeMs = data.finishTime;
-        updateStatusBadge("started");
-        addLog("Match resumed", "info");
-        break;
+        status = "started";
+        if (d.finishTime) finishMs = d.finishTime;
+        setStatus("started");
+        addLog("Match resumed", ""); break;
 
       case "match-finish":
-        matchStatus = "finished";
-        updateStatusBadge("finished");
-        addLog("Match finished", "info");
+        status = "finished"; setStatus("finished");
+        addLog("Match finished", "wrn"); break;
+
+      case "server-event":
+        addLog("Server: " + (d.message || ""), "");
+        if (d.finishTime) finishMs = d.finishTime;
+        if (d.botTeam) botTeam = d.botTeam;
         break;
 
       case "error":
-        addLog("Server error: " + (data.message || JSON.stringify(data)), "error");
-        break;
+        addLog("ERROR: " + (d.message || JSON.stringify(d)), "err"); break;
 
       case "info":
-        addLog("Server: " + (data.message || ""), "info");
-        break;
+        addLog("Info: " + (d.message || ""), ""); break;
 
       default:
-        addLog("Unknown: " + type + " " + JSON.stringify(data).substring(0, 80), "warn");
+        addLog("Unknown: " + t, "wrn");
     }
   }
 
-  // ── Handlers ───────────────────────────────────────
-  function handleMatchState(data) {
-    if (data.topic) $("match-topic").textContent = data.topic;
-    if (data.round) $("badge-round").textContent = data.round;
-    if (data.finishTime) finishTimeMs = data.finishTime;
-    if (data.status) {
-      matchStatus = data.status;
-      updateStatusBadge(data.status);
-    }
-    if (data.turn) {
-      currentTurn = data.turn;
-      updateTurnIndicator();
-    }
-    if (data.pros) pros = data.pros;
-    if (data.cons) cons = data.cons;
-
+  function onMatchState(d) {
+    if (d.topic) $("d-topic").textContent = d.topic;
+    if (d.finishTime) finishMs = d.finishTime;
+    if (d.status) { status = d.status; setStatus(d.status); }
+    if (d.turn) { turn = d.turn; updateTurn(); }
+    if (d.pros) pros = d.pros;
+    if (d.cons) cons = d.cons;
     updateStances();
     updatePhase();
-    addLog("State: turn=" + (data.turn||"?") + " status=" + (data.status||"?"), "info");
+    addLog("State: turn=" + (d.turn||"?") + " status=" + (d.status||"?"), "");
   }
 
-  function handleMatchUpdate(data) {
-    if (data.finishTime) finishTimeMs = data.finishTime;
-    matchStatus = "started";
-    updateStatusBadge("started");
-    addLog("Match started. Timer running.", "info");
-  }
-
-  function handleDebateMessage(from, data, timestamp) {
-    const text = data.message || "";
-    const isOurs = isSameTeam(from, teamName);
-    const charCount = text.length;
+  function onDebateMsg(from, d) {
+    const text = d.message || "";
+    const isOurs = same(from, team) || same(from, botTeam);
 
     if (isOurs) {
-      ourMessageCount++;
-      totalChars += charCount;
-      appendMessage("our-messages", text, charCount, ourMessageCount, true);
-      $("our-count").textContent = ourMessageCount + " message" + (ourMessageCount !== 1 ? "s" : "");
+      botMsgs++;
+      totalBotChars += text.length;
+      $("st-bot").textContent = botMsgs;
+      if (botMsgs > 0) $("st-avg").textContent = Math.round(totalBotChars / botMsgs);
+      $("st-cost").textContent = "$" + (botMsgs * 0.038).toFixed(2);
     } else {
-      oppMessageCount++;
-      appendMessage("opp-messages", text, charCount, oppMessageCount, false);
-      $("opp-count").textContent = oppMessageCount + " message" + (oppMessageCount !== 1 ? "s" : "");
+      oppMsgs++;
+      $("st-opp").textContent = oppMsgs;
     }
 
-    const total = ourMessageCount + oppMessageCount;
-    $("stat-total").textContent = total;
-    if (ourMessageCount > 0) {
-      $("stat-avg-chars").textContent = Math.round(totalChars / ourMessageCount);
-    }
-
-    // Rough cost estimate: ~$0.38 per 10-turn match
-    const estCost = ourMessageCount * 0.038;
-    $("stat-cost").textContent = "$" + estCost.toFixed(2);
-
+    appendMsg(text, isOurs, isOurs ? botMsgs : oppMsgs);
     updatePhase();
-    addLog((isOurs ? "US" : "OPP") + " #" + (isOurs ? ourMessageCount : oppMessageCount) + ": " + charCount + " chars", "info");
   }
 
-  function handlePreviousMessages(data) {
-    const conversations = data.conversations || [];
-    conversations.forEach(function(entry) {
-      const isOurs = isSameTeam(entry.team, teamName);
-      const text = entry.message || "";
-      if (isOurs) {
-        ourMessageCount++;
-        totalChars += text.length;
-        appendMessage("our-messages", text, text.length, ourMessageCount, true);
-      } else {
-        oppMessageCount++;
-        appendMessage("opp-messages", text, text.length, oppMessageCount, false);
-      }
-    });
-
-    $("our-count").textContent = ourMessageCount + " message" + (ourMessageCount !== 1 ? "s" : "");
-    $("opp-count").textContent = oppMessageCount + " message" + (oppMessageCount !== 1 ? "s" : "");
-    $("stat-total").textContent = ourMessageCount + oppMessageCount;
-    if (ourMessageCount > 0) {
-      $("stat-avg-chars").textContent = Math.round(totalChars / ourMessageCount);
-    }
-    addLog("Loaded " + conversations.length + " previous messages", "info");
-  }
-
-  // ── UI Updates ─────────────────────────────────────
-  function appendMessage(panelId, text, charCount, num, isOurs) {
-    const panel = $(panelId);
-    // Remove empty state
-    const empty = panel.querySelector(".empty-state");
+  // ── UI Helpers ──────────────────────────
+  function appendMsg(text, isOurs, num) {
+    const feed = $("feed");
+    const empty = feed.querySelector(".empty-feed");
     if (empty) empty.remove();
 
     const card = document.createElement("div");
-    card.className = "message-card " + (isOurs ? "ours" : "theirs");
+    card.className = "msg " + (isOurs ? "ours" : "theirs");
+
+    const head = document.createElement("div");
+    head.className = "msg-head " + (isOurs ? "ours" : "theirs");
+    head.innerHTML = "<span>" + (isOurs ? "Our Bot" : "Opponent") + " #" + num + "</span><span>" + now() + "</span>";
 
     const body = document.createElement("div");
     body.textContent = text;
 
-    const meta = document.createElement("div");
-    meta.className = "message-meta";
-    meta.innerHTML = '<span>#' + num + '</span><span>' + charCount + ' chars</span><span>' + timeNow() + '</span>';
+    const foot = document.createElement("div");
+    foot.className = "msg-foot";
+    foot.innerHTML = "<span>" + text.length + " chars</span>";
 
+    card.appendChild(head);
     card.appendChild(body);
-    card.appendChild(meta);
-    panel.appendChild(card);
-    panel.scrollTop = panel.scrollHeight;
+    card.appendChild(foot);
+    feed.appendChild(card);
+    feed.scrollTop = feed.scrollHeight;
   }
 
-  function updateStatusBadge(status) {
-    const badge = $("badge-status");
-    badge.className = "badge badge-status " + status;
-    const labels = {
-      pending: "Pending", active: "Active", started: "Live", paused: "Paused",
-      finished: "Finished", disconnected: "Disconnected"
-    };
-    badge.textContent = labels[status] || status;
+  function setStatus(s) {
+    const el = $("d-status");
+    const map = { pending:"Pending", active:"Active", started:"Live", paused:"Paused", finished:"Finished", disconnected:"Offline" };
+    el.textContent = map[s] || s;
+    el.className = "pill " + (s === "started" ? "pill-live" : "pill-off");
   }
 
-  function updateTurnIndicator() {
-    const el = $("turn-indicator");
-    const text = $("turn-text");
-    if (isSameTeam(currentTurn, teamName)) {
-      el.className = "turn-indicator ours";
-      text.textContent = "Our Turn";
+  function updateTurn() {
+    const el = $("d-turn");
+    const txt = $("d-turn-text");
+    if (same(turn, team) || same(turn, botTeam)) {
+      el.className = "turn-pill ours";
+      txt.textContent = "Bot's Turn";
     } else {
-      el.className = "turn-indicator theirs";
-      text.textContent = "Their Turn";
+      el.className = "turn-pill theirs";
+      txt.textContent = "Your Turn";
     }
   }
 
   function updateStances() {
-    if (isSameTeam(teamName, pros)) {
-      $("our-stance").textContent = "PRO";
-      $("opp-stance").textContent = "CON";
-    } else if (isSameTeam(teamName, cons)) {
-      $("our-stance").textContent = "CON";
-      $("opp-stance").textContent = "PRO";
+    if (same(botTeam, pros) || same(team, pros)) {
+      $("d-us-stance").textContent = "PRO";
+      $("d-opp-stance").textContent = "CON";
+    } else {
+      $("d-us-stance").textContent = "CON";
+      $("d-opp-stance").textContent = "PRO";
     }
-
-    // Determine opponent name
-    const t1 = $("match-topic").dataset.team1 || "";
-    const t2 = $("match-topic").dataset.team2 || "";
-    if (!isSameTeam(t1, teamName) && t1) {
-      $("opp-team-label").textContent = t1;
-    } else if (!isSameTeam(t2, teamName) && t2) {
-      $("opp-team-label").textContent = t2;
-    }
+    // opponent name
+    const opp = same(botTeam, "team1") ? "team2" : "team1";
+    $("d-opp").textContent = opp;
   }
 
   function updatePhase() {
-    const remaining = finishTimeMs > 0 ? Math.max(0, (finishTimeMs - Date.now()) / 1000) : 999;
-    let phase = "Waiting";
-    if (matchStatus === "started" || matchStatus === "active") {
-      if (ourMessageCount === 0) phase = "Opening";
-      else if (remaining < 180 && ourMessageCount >= 6) phase = "Closing";
-      else if (ourMessageCount === 1) phase = "Rebuttal";
-      else if (ourMessageCount <= 3) phase = "Cross-Exam";
-      else phase = "Defense";
-    } else if (matchStatus === "finished") {
-      phase = "Finished";
-    }
-    $("badge-phase").textContent = phase;
+    const rem = finishMs > 0 ? Math.max(0, (finishMs - Date.now()) / 1000) : 999;
+    let ph = "--";
+    if (status === "started" || status === "active") {
+      if (botMsgs === 0) ph = "Opening";
+      else if (rem < 180 && botMsgs >= 6) ph = "Closing";
+      else if (botMsgs === 1) ph = "Rebuttal";
+      else if (botMsgs <= 3) ph = "Cross-Exam";
+      else ph = "Defense";
+    } else if (status === "finished") ph = "Finished";
+    $("d-phase").textContent = ph;
   }
 
-  // ── Timer ──────────────────────────────────────────
-  function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(function() {
-      if (finishTimeMs > 0) {
-        const remaining = Math.max(0, finishTimeMs - Date.now());
-        $("timer").textContent = formatTime(remaining);
-        if (remaining <= 60000) {
-          $("timer").style.color = "var(--red)";
-        } else if (remaining <= 180000) {
-          $("timer").style.color = "var(--amber)";
-        } else {
-          $("timer").style.color = "var(--text)";
-        }
+  // ── Timer ───────────────────────────────
+  function startTick() {
+    stopTick();
+    tick = setInterval(() => {
+      if (finishMs > 0) {
+        const rem = Math.max(0, finishMs - Date.now());
+        $("d-timer").textContent = fmtTime(rem);
+        $("d-timer").style.color = rem <= 60000 ? "var(--red)" : rem <= 180000 ? "var(--amber)" : "var(--text)";
       }
       updatePhase();
     }, 1000);
   }
 
-  function stopTimer() {
-    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  }
+  function stopTick() { if (tick) { clearInterval(tick); tick = null; } }
 
-  // ── Init ───────────────────────────────────────────
-  loadConfig();
+  // ── Keyboard shortcut ───────────────────
+  document.addEventListener("keydown", e => {
+    // Ctrl+Enter or Cmd+Enter to send opponent message
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && document.activeElement === $("opp-input")) {
+      e.preventDefault();
+      sendOpponent();
+    }
+  });
+
+  // init
+  load();
 })();
 </script>
 </body>
