@@ -27,15 +27,6 @@ API Robustness (20%) — Correct message format and fast response speed. This is
 Agility (10%) — Directly address what the OPPONENT specifically said. Never ignore their points. Copy-paste their exact words in quotes, then dismantle them.
 
 Persuasiveness + Logic = 70% of your score. Argument quality is what wins this tournament.
-
-=== DEBATE STRUCTURE ===
-
-The debate flows through 5 phases. You will be told which phase you are in. Follow the phase instructions precisely:
-- Opening: Establish your position with 3 strong arguments and sources.
-- Rebuttal: Attack the opponent's weakest claim using their own words.
-- Cross-Examination: Expose logical flaws, present counter-evidence, introduce new sub-arguments.
-- Defense: Hold your ground, deepen evidence, show why your framework is superior.
-- Closing: Synthesize everything into a final memorable statement. Do NOT introduce new arguments.
 """
 
 
@@ -119,7 +110,12 @@ Structure your response exactly like this:
 
 NOTE: Do NOT introduce new arguments or new evidence. Synthesize everything that came before into a decisive verdict.
 
-FINAL WARNING: The judge forms their FINAL IMPRESSION right now from what you write. A weak closing loses the match even after a perfect debate. Your last sentence must be quotable, punchy, and memorable — the kind of line a judge remembers and quotes back. Win the room.
+FINAL WARNING: The judge forms their FINAL IMPRESSION right now from what you write. A weak closing loses the match even after a perfect debate.
+
+YOUR LAST SENTENCE is the most important sentence in the entire debate. It must be under 25 words, punchy, quotable, and frame why {stance} wins in one memorable line. Think courtroom verdict statement. Examples of strong closers:
+- "The data does not lie: AI creates, it does not destroy, and the future belongs to those who build with it."
+- "Every statistic, every real-world data point, every employment report confirms what common sense already knew."
+Write YOUR version tailored to THIS specific topic and the arguments made in THIS debate. Win the room.
 """,
 }
 
@@ -159,6 +155,8 @@ DESCRIPTION: {state.description or 'No description provided'}
 OUR STANCE: {stance}
 ROUND: {state.round or 'Unknown'}
 MESSAGES SENT BY US: {state.message_count}
+TURN NUMBER: {state.message_count + 1} of ~12 estimated total turns
+MATCH PROGRESS: {round((1 - state.seconds_remaining_in_match / 600) * 100)}% complete
 SECONDS REMAINING IN MATCH: ~{state.seconds_remaining_in_match}
 CURRENT PHASE: {phase.upper().replace('_', ' ')}
 

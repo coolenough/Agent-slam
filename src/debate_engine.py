@@ -188,6 +188,7 @@ class DebateEngine:
 
                 text = self._strip_markdown(text)
                 text = self._trim_to_limit(text)
+                self._quality_check(text, state.debate_phase)
                 logger.info(
                     "Argument ready: %d chars, phase=%s",
                     len(text), state.debate_phase,
@@ -340,6 +341,16 @@ class DebateEngine:
         except Exception as e:
             logger.critical("EMERGENCY mode API failed: %s — using hardcoded fallback", e)
             return self._get_fallback(state.debate_phase)
+
+    def _quality_check(self, text: str, phase: str) -> None:
+        """Log warnings for quality issues. No retries — just monitoring."""
+        if phase != "opening" and '"' not in text:
+            logger.warning("QUALITY: Missing opponent quote — Agility penalty risk")
+        if len(text) < 800:
+            logger.warning("QUALITY: Response too short (%d chars) — may appear weak", len(text))
+        url_count = len(re.findall(r'https?://[^\s\)]+', text))
+        if phase in ("opening", "rebuttal_first", "cross_examination") and url_count == 0:
+            logger.warning("QUALITY: No sources cited — Persuasiveness penalty risk")
 
     def _extract_text(self, response) -> str:
         text_parts = []
