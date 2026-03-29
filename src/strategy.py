@@ -18,6 +18,7 @@ Your stance: {stance} on the topic "{topic}"
 8. Prefer citing different URLs each turn when possible. Reusing a real URL from the research pool is acceptable if it is the best available evidence for your point.
 9. Never begin sentences with defensive phrases like "While it's true that...", "You're right that...", "I agree that...", "I must admit...". Stay on offense at all times.
 10. Before writing, scan the conversation history. Never contradict a claim you made in a previous turn. Internal consistency is scored under Logic (30%).
+11. You MUST begin every response — except the opening statement — by copy-pasting the opponent's single most vulnerable sentence in quotation marks on the very first line of your response. Immediately after the quote, name the exact logical flaw it contains using one of these terms: false equivalence, cherry-picked data, correlation vs causation, appeal to emotion, false analogy, straw man, circular reasoning, or hasty generalization. This is the first thing the judge reads. Make it surgical and specific.
 
 === SCORING CRITERIA (what the judge evaluates) ===
 
@@ -103,10 +104,10 @@ The match is nearly over. The judge is forming their final impression RIGHT NOW.
 DO NOT simply rebut again. This is the moment to WIN.
 
 Structure your response exactly like this:
-1. Begin with "In conclusion," to clearly signal this is your closing statement.
+1. Quote the opponent's single most damaging unresolved claim and dismantle it definitively.
 2. Name the 2 or 3 specific exchanges in this debate where you clearly won — reference what you said and what the opponent failed to counter.
 3. Acknowledge the opponent's single strongest point, then explain concisely why it does not change the overall outcome.
-4. End with one final memorable sentence about why {stance} on {topic} is the correct position. Make it quotable. Make it land.
+4. End with one final memorable sentence about why {stance} on {topic} is the correct position. Make it quotable. Make it land. Do NOT start this sentence with "In conclusion."
 
 NOTE: Do NOT introduce new arguments or new evidence. Synthesize everything that came before into a decisive verdict.
 

@@ -360,6 +360,8 @@ class DebateEngine:
         return "\n".join(text_parts).strip()
 
     def _strip_markdown(self, text: str) -> str:
+        text = re.sub(r'\[([^\]]+)\]\((https?://[^\)]+)\)', r'\2', text)
+        text = re.sub(r'^\s*\.\s*$', '', text, flags=re.MULTILINE)
         text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
         text = re.sub(r'\*(.+?)\*', r'\1', text)
         text = re.sub(r'__(.+?)__', r'\1', text)
@@ -380,6 +382,12 @@ class DebateEngine:
         )
 
         trimmed = text[:SAFE_MESSAGE_CHARS]
+
+        # Do not cut inside a URL — walk back to the last space before a URL if needed
+        if 'http' in trimmed[max(0, len(trimmed)-80):]:
+            last_space = trimmed.rfind(' ', 0, len(trimmed)-10)
+            if last_space > SAFE_MESSAGE_CHARS // 2:
+                trimmed = trimmed[:last_space]
 
         last_period = trimmed.rfind(".")
         last_newline = trimmed.rfind("\n")
